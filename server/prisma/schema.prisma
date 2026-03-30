@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===================== ENUMS =====================
+
+enum CandidatureStatus {
+  A_POSTULER
+  POSTULE
+  RELANCE
+  ENTRETIEN
+  OFFRE
+  REFUS
+}
+
+enum BourseStatus {
+  RECHERCHE
+  ELIGIBLE
+  DOSSIER_EN_COURS
+  SOUMIS
+  ACCEPTE
+  REFUSE
+}
+
+enum DocumentStatus {
+  A_FAIRE
+  EN_COURS
+  PRET
+}
+
+enum ObjectiveStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum EventSource {
+  MANUAL
+  CANDIDATURE
+  BOURSE
+  OBJECTIVE
+  DOCUMENT
+}
+
+// ===================== USER =====================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  candidatures  Candidature[]
+  bourses       Bourse[]
+  objectives    Objective[]
+  documents     Document[]
+  events        Event[]
+  notes         Note[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ===================== ALTERNANCE / CANDIDATURES =====================
+
+model Candidature {
+  id           String            @id @default(uuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName  String
+  jobTitle     String
+  jobUrl       String?
+  location     String?
+  status       CandidatureStatus @default(A_POSTULER)
+  appliedAt    DateTime?
+  nextFollowUp DateTime?
+  salary       String?
+  description  String?
+  contacts     Contact[]
+  activities   CandidatureActivity[]
+  attachments  Attachment[]
+  notes        Note[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([userId, status])
+  @@map("candidatures")
+}
+
+model Contact {
+  id            String      @id @default(uuid())
+  candidatureId String
+  candidature   Candidature @relation(fields: [candidatureId], references: [id], onDelete: Cascade)
+  name          String
+  role          String?
+  email         String?
+  phone         String?
+  linkedinUrl   String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+
+  @@index([candidatureId])
+  @@map("contacts")
+}
+
+model CandidatureActivity {
+  id            String             @id @default(uuid())
+  candidatureId String
+  candidature   Candidature        @relation(fields: [candidatureId], references: [id], onDelete: Cascade)
+  type          String
+  description   String
+  oldStatus     CandidatureStatus?
+  newStatus     CandidatureStatus?
+  date          DateTime           @default(now())
+
+  @@index([candidatureId])
+  @@map("candidature_activities")
+}
+
+model Attachment {
+  id            String      @id @default(uuid())
+  candidatureId String
+  candidature   Candidature @relation(fields: [candidatureId], references: [id], onDelete: Cascade)
+  fileName      String
+  filePath      String
+  fileSize      Int
+  mimeType      String
+  createdAt     DateTime    @default(now())
+
+  @@index([candidatureId])
+  @@map("attachments")
+}
+
+// ===================== BOURSES & AIDES =====================
+
+model Bourse {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  organism       String?
+  type           String?
+  amount         Decimal?       @db.Decimal(10, 2)
+  status         BourseStatus   @default(RECHERCHE)
+  eligibility    String?
+  applicationUrl String?
+  deadline       DateTime?
+  notes          String?
+  requiredDocs   BourseDocument[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([userId])
+  @@map("bourses")
+}
+
+model BourseDocument {
+  id       String         @id @default(uuid())
+  bourseId String
+  bourse   Bourse         @relation(fields: [bourseId], references: [id], onDelete: Cascade)
+  name     String
+  status   DocumentStatus @default(A_FAIRE)
+  notes    String?
+
+  @@index([bourseId])
+  @@map("bourse_documents")
+}
+
+// ===================== OBJECTIVES & MILESTONES =====================
+
+model Objective {
+  id            String          @id @default(uuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  status        ObjectiveStatus @default(NOT_STARTED)
+  targetDate    DateTime?
+  category      String?
+  specific      String?
+  measurable    String?
+  achievable    String?
+  relevant      String?
+  timeBound     String?
+  streakCurrent Int             @default(0)
+  streakBest    Int             @default(0)
+  lastCheckIn   DateTime?
+  milestones    Milestone[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([userId])
+  @@map("objectives")
+}
+
+model Milestone {
+  id          String    @id @default(uuid())
+  objectiveId String
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  title       String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  sortOrder   Int       @default(0)
+
+  @@index([objectiveId])
+  @@map("milestones")
+}
+
+// ===================== DOCUMENTS & ADMIN =====================
+
+model Document {
+  id        String            @id @default(uuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  category  String?
+  status    DocumentStatus    @default(A_FAIRE)
+  notes     String?
+  versions  DocumentVersion[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([userId])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id           String   @id @default(uuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versionLabel String
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  createdAt    DateTime @default(now())
+
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+// ===================== AGENDA & EVENTS =====================
+
+model Event {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean     @default(false)
+  color       String?
+  source      EventSource @default(MANUAL)
+  sourceId    String?
+  reminder    DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([userId, startDate])
+  @@map("events")
+}
+
+// ===================== JOURNAL / NOTES =====================
+
+model Note {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  content       String
+  type          String?
+  tags          String[]
+  candidatureId String?
+  candidature   Candidature? @relation(fields: [candidatureId], references: [id], onDelete: SetNull)
+  isPinned      Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([userId, candidatureId])
+  @@map("notes")
+}
