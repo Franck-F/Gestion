@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, Settings, LogOut, BookOpen, FileText } from 'lucide-react'
+import { Menu, Settings, LogOut, BookOpen, FileText, Calendar } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { NotificationBell } from './NotificationBell.jsx'
 
@@ -29,6 +29,9 @@ export function Header() {
                     <p className="text-sm font-medium text-surface-800 truncate">{user?.firstName} {user?.lastName}</p>
                     <p className="text-xs text-surface-400 truncate">{user?.email}</p>
                   </div>
+                  <Link to="/agenda" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-surface-600 hover:bg-surface-50">
+                    <Calendar size={16} /> Agenda
+                  </Link>
                   <Link to="/documents" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-surface-600 hover:bg-surface-50">
                     <FileText size={16} /> Documents
                   </Link>

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Briefcase, GraduationCap, Target, Calendar
+  LayoutDashboard, Briefcase, GraduationCap, Target, Bot
 } from 'lucide-react'
 
 const navItems = [
@@ -8,7 +8,7 @@ const navItems = [
   { to: '/candidatures', icon: Briefcase, label: 'Candidat.' },
   { to: '/bourses', icon: GraduationCap, label: 'Bourses' },
   { to: '/objectives', icon: Target, label: 'Objectifs' },
-  { to: '/agenda', icon: Calendar, label: 'Agenda' },
+  { to: '/chat', icon: Bot, label: 'Assistant' },
 ]
 
 export function BottomNav() {

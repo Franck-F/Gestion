@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Briefcase, GraduationCap, Target,
-  FileText, Calendar, BookOpen, Settings, LogOut
+  FileText, Calendar, BookOpen, Settings, LogOut, Bot
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { NotificationBell } from './NotificationBell.jsx'
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/documents', icon: FileText, label: 'Documents' },
   { to: '/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/journal', icon: BookOpen, label: 'Journal' },
+  { to: '/chat', icon: Bot, label: 'Assistant IA' },
 ]
 
 export function Sidebar() {

@@ -9,6 +9,7 @@ import eventsRoutes from './events.routes.js'
 import notesRoutes from './notes.routes.js'
 import dashboardRoutes from './dashboard.routes.js'
 import notificationsRoutes from './notifications.routes.js'
+import chatRoutes from './chat.routes.js'
 
 const router = Router()
 
@@ -21,6 +22,7 @@ router.use('/events', eventsRoutes)
 router.use('/notes', notesRoutes)
 router.use('/dashboard', dashboardRoutes)
 router.use('/notifications', notificationsRoutes)
+router.use('/chat', chatRoutes)
 
 router.get('/health', async (req, res) => {
   try {

@@ -19,6 +19,7 @@ import { DocumentsPage } from './pages/DocumentsPage.jsx'
 import { AgendaPage } from './pages/AgendaPage.jsx'
 import { JournalPage } from './pages/JournalPage.jsx'
 import { SettingsPage } from './pages/SettingsPage.jsx'
+import { ChatPage } from './pages/ChatPage.jsx'
 import { NotFoundPage } from './pages/NotFoundPage.jsx'
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ export default function App() {
                 <Route path="documents" element={<DocumentsPage />} />
                 <Route path="agenda" element={<AgendaPage />} />
                 <Route path="journal" element={<JournalPage />} />
+                <Route path="chat" element={<ChatPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />
