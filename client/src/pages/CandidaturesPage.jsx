@@ -10,6 +10,7 @@ import { Card } from '../components/ui/Card.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { useToast } from '../components/ui/Toast.jsx'
 import { CANDIDATURE_STATUS, CANDIDATURE_COLUMNS } from '../utils/constants.js'
 import { formatDate, formatRelative } from '../utils/dateUtils.js'
@@ -62,7 +63,7 @@ function KanbanColumn({ status, candidatures, onDragOver }) {
   const items = candidatures.filter(c => c.status === status)
 
   return (
-    <div className="flex-shrink-0 w-60 sm:w-72 md:w-auto md:flex-1">
+    <div className="flex-shrink-0 w-[70vw] md:w-auto md:flex-1">
       <div className="flex items-center gap-2 mb-3 px-1">
         <span className={`w-2 h-2 rounded-full ${statusConfig.dot}`} />
         <h3 className="text-sm font-semibold text-surface-700">{statusConfig.label}</h3>
@@ -84,7 +85,7 @@ export function CandidaturesPage() {
   const queryClient = useQueryClient()
   const toast = useToast()
 
-  const { data: candidatures = [], isLoading } = useQuery({
+  const { data: candidatures = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['candidatures', { search }],
     queryFn: () => candidaturesApi.list({ search: search || undefined, limit: 200 }).then(r => r.data?.data || r.data),
   })
@@ -121,6 +122,7 @@ export function CandidaturesPage() {
   }
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   return (
     <div>

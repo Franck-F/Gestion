@@ -9,6 +9,7 @@ import { PageHeader } from '../components/layout/PageHeader.jsx'
 import { Card, CardBody } from '../components/ui/Card.jsx'
 import { ProgressBar } from '../components/ui/ProgressBar.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { Badge } from '../components/ui/Badge.jsx'
 import { formatDeadline, isOverdue } from '../utils/dateUtils.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
@@ -45,7 +46,7 @@ function StatCard({ icon: Icon, label, value, to, color }) {
 export function DashboardPage() {
   const { user } = useAuth()
 
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: () => dashboardApi.getStats().then(r => r.data),
   })
@@ -61,6 +62,7 @@ export function DashboardPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   const urgentDeadlines = deadlines.filter(d => {
     const days = Math.ceil((new Date(d.date) - new Date()) / (1000 * 60 * 60 * 24))

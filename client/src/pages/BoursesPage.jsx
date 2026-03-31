@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/Badge.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { useToast } from '../components/ui/Toast.jsx'
 import { BOURSE_STATUS } from '../utils/constants.js'
@@ -74,7 +75,7 @@ export function BoursesPage() {
   const toast = useToast()
   const navigate = useNavigate()
 
-  const { data: bourses = [], isLoading } = useQuery({
+  const { data: bourses = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['bourses'],
     queryFn: () => boursesApi.list().then(r => r.data),
   })
@@ -85,6 +86,7 @@ export function BoursesPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   return (
     <div>

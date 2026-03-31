@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { ProgressBar } from '../components/ui/ProgressBar.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { Input } from '../components/ui/Input.jsx'
@@ -74,7 +75,7 @@ export function ObjectivesPage() {
   const queryClient = useQueryClient()
   const toast = useToast()
 
-  const { data: objectives = [], isLoading } = useQuery({
+  const { data: objectives = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['objectives'],
     queryFn: () => objectivesApi.list().then(r => r.data),
   })
@@ -105,6 +106,7 @@ export function ObjectivesPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   return (
     <div>
@@ -160,7 +162,7 @@ export function ObjectivesPage() {
                         {ms.completed ? <Check size={16} className="text-success-500" /> : <Circle size={16} className="text-surface-300" />}
                       </button>
                       <span className={`text-sm flex-1 ${ms.completed ? 'line-through text-surface-400' : 'text-surface-700'}`}>{ms.title}</span>
-                      <button onClick={() => deleteMilestoneMutation.mutate({ objId: obj.id, milestoneId: ms.id })} className="opacity-0 group-hover:opacity-100 cursor-pointer"><Trash2 size={12} className="text-surface-400" /></button>
+                      <button onClick={() => deleteMilestoneMutation.mutate({ objId: obj.id, milestoneId: ms.id })} className="opacity-60 md:opacity-0 md:group-hover:opacity-100 cursor-pointer"><Trash2 size={12} className="text-surface-400" /></button>
                     </li>
                   ))}
                 </ul>

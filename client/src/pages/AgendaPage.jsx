@@ -8,6 +8,7 @@ import { Card, CardBody } from '../components/ui/Card.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { Input } from '../components/ui/Input.jsx'
 import { useToast } from '../components/ui/Toast.jsx'
@@ -68,7 +69,7 @@ export function AgendaPage() {
   const start = startOfMonth(currentMonth)
   const end = endOfMonth(currentMonth)
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['events', format(start, 'yyyy-MM'), format(end, 'yyyy-MM')],
     queryFn: () => eventsApi.list({ start: start.toISOString(), end: end.toISOString() }).then(r => r.data),
   })
@@ -96,6 +97,7 @@ export function AgendaPage() {
   const selectedDayEvents = selectedDay ? dayEvents(selectedDay) : []
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   return (
     <div>

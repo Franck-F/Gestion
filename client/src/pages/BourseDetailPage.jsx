@@ -10,6 +10,7 @@ import { Card, CardBody } from '../components/ui/Card.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { Input } from '../components/ui/Input.jsx'
 import { Select } from '../components/ui/Select.jsx'
 import { ProgressBar } from '../components/ui/ProgressBar.jsx'
@@ -26,7 +27,7 @@ export function BourseDetailPage() {
   const [showAddDoc, setShowAddDoc] = useState(false)
   const [newDocName, setNewDocName] = useState('')
 
-  const { data: bourse, isLoading } = useQuery({
+  const { data: bourse, isLoading, isError, refetch } = useQuery({
     queryKey: ['bourse', id],
     queryFn: () => boursesApi.getOne(id).then(r => r.data),
   })
@@ -52,6 +53,7 @@ export function BourseDetailPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
   if (!bourse) return <p>Bourse non trouvée</p>
 
   const sc = BOURSE_STATUS[bourse.status]

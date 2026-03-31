@@ -10,6 +10,7 @@ import { Card, CardBody } from '../components/ui/Card.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { useToast } from '../components/ui/Toast.jsx'
 import { CandidatureForm } from '../components/candidatures/CandidatureForm.jsx'
 import { CANDIDATURE_STATUS } from '../utils/constants.js'
@@ -38,11 +39,11 @@ function ContactForm({ candidatureId, contact, onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Input label="Nom" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
         <Input label="Rôle" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
         <Input label="Téléphone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
       </div>
@@ -63,7 +64,7 @@ export function CandidatureDetailPage() {
   const [showDelete, setShowDelete] = useState(false)
   const [showContactForm, setShowContactForm] = useState(false)
 
-  const { data: candidature, isLoading } = useQuery({
+  const { data: candidature, isLoading, isError, refetch } = useQuery({
     queryKey: ['candidature', id],
     queryFn: () => candidaturesApi.getOne(id).then(r => r.data),
   })
@@ -79,6 +80,7 @@ export function CandidatureDetailPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
   if (!candidature) return <p>Candidature non trouvée</p>
 
   const statusConfig = CANDIDATURE_STATUS[candidature.status]

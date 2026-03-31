@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { Input } from '../components/ui/Input.jsx'
 import { Select } from '../components/ui/Select.jsx'
@@ -65,7 +66,7 @@ export function JournalPage() {
   const queryClient = useQueryClient()
   const toast = useToast()
 
-  const { data: notes = [], isLoading } = useQuery({
+  const { data: notes = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['notes', { search: search || undefined, type: typeFilter || undefined }],
     queryFn: () => notesApi.list({ search: search || undefined, type: typeFilter || undefined }).then(r => r.data),
   })
@@ -81,6 +82,7 @@ export function JournalPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   return (
     <div>

@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
 import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ErrorState } from '../components/ui/ErrorState.jsx'
 import { ProgressBar } from '../components/ui/ProgressBar.jsx'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx'
 import { Input } from '../components/ui/Input.jsx'
@@ -59,7 +60,7 @@ export function DocumentsPage() {
   const queryClient = useQueryClient()
   const toast = useToast()
 
-  const { data: documents = [], isLoading } = useQuery({
+  const { data: documents = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['documents', { status: filter || undefined }],
     queryFn: () => documentsApi.list({ status: filter || undefined }).then(r => r.data),
   })
@@ -85,6 +86,7 @@ export function DocumentsPage() {
   })
 
   if (isLoading) return <PageSpinner />
+  if (isError) return <ErrorState message="Impossible de charger les données" onRetry={refetch} />
 
   const ready = documents.filter(d => d.status === 'PRET').length
   const total = documents.length

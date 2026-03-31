@@ -47,7 +47,7 @@ function ThemeSelector() {
   const { themeId, setTheme } = useTheme()
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
       {Object.entries(THEMES).map(([id, theme]) => (
         <button
           key={id}
