@@ -13,6 +13,6 @@ router.post('/', validate(createNoteSchema), ctrl.create)
 router.get('/:id', validateId, ctrl.getOne)
 router.patch('/:id', validateId, validate(updateNoteSchema), ctrl.update)
 router.delete('/:id', validateId, ctrl.remove)
-router.patch('/:id/pin', ctrl.togglePin)
+router.patch('/:id/pin', validateId, ctrl.togglePin)
 
 export default router

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { ToastProvider } from './components/ui/Toast.jsx'
+import { ErrorBoundary } from './components/ui/ErrorBoundary.jsx'
 import { ProtectedRoute } from './components/auth/ProtectedRoute.jsx'
 import { AppLayout } from './components/layout/AppLayout.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
@@ -37,6 +38,7 @@ export default function App() {
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
+            <ErrorBoundary>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -55,6 +57,7 @@ export default function App() {
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </ErrorBoundary>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

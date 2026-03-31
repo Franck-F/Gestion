@@ -14,7 +14,7 @@ router.get('/:id', validateId, ctrl.getOne)
 router.patch('/:id', validateId, validate(updateDocumentSchema), ctrl.update)
 router.delete('/:id', validateId, ctrl.remove)
 
-router.post('/:id/, validateId,versions', ctrl.upload.single('file'), ctrl.addVersion)
-router.delete('/:id/versions/:versionId', ctrl.deleteVersion)
+router.post('/:id/versions', validateId, ctrl.upload.single('file'), ctrl.addVersion)
+router.delete('/:id/versions/:versionId', validateId, ctrl.deleteVersion)
 
 export default router

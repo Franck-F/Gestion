@@ -14,8 +14,8 @@ router.get('/:id', validateId, ctrl.getOne)
 router.patch('/:id', validateId, validate(updateBourseSchema), ctrl.update)
 router.delete('/:id', validateId, ctrl.remove)
 
-router.post('/:id/, validateId,documents', validate(createBourseDocSchema), ctrl.addDoc)
-router.patch('/:id/documents/:docId', validate(updateBourseDocSchema), ctrl.updateDoc)
-router.delete('/:id/documents/:docId', ctrl.removeDoc)
+router.post('/:id/documents', validateId, validate(createBourseDocSchema), ctrl.addDoc)
+router.patch('/:id/documents/:docId', validateId, validate(updateBourseDocSchema), ctrl.updateDoc)
+router.delete('/:id/documents/:docId', validateId, ctrl.removeDoc)
 
 export default router

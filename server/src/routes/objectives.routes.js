@@ -13,11 +13,11 @@ router.post('/', validate(createObjectiveSchema), ctrl.create)
 router.get('/:id', validateId, ctrl.getOne)
 router.patch('/:id', validateId, validate(updateObjectiveSchema), ctrl.update)
 router.delete('/:id', validateId, ctrl.remove)
-router.post('/:id/, validateId,check-in', ctrl.checkIn)
+router.post('/:id/check-in', validateId, ctrl.checkIn)
 
-router.post('/:id/, validateId,milestones', validate(createMilestoneSchema), ctrl.createMilestone)
-router.patch('/:id/milestones/:milestoneId', validate(updateMilestoneSchema), ctrl.updateMilestone)
-router.delete('/:id/milestones/:milestoneId', ctrl.deleteMilestone)
-router.patch('/:id/milestones/reorder', validate(reorderMilestonesSchema), ctrl.reorderMilestones)
+router.post('/:id/milestones', validateId, validate(createMilestoneSchema), ctrl.createMilestone)
+router.patch('/:id/milestones/:milestoneId', validateId, validate(updateMilestoneSchema), ctrl.updateMilestone)
+router.delete('/:id/milestones/:milestoneId', validateId, ctrl.deleteMilestone)
+router.patch('/:id/milestones/reorder', validateId, validate(reorderMilestonesSchema), ctrl.reorderMilestones)
 
 export default router
