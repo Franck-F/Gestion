@@ -21,8 +21,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-surface-200/80 h-dvh sticky top-0">
       <div className="px-6 py-5 border-b border-surface-100">
-        <h1 className="text-xl font-bold font-heading text-primary-700 tracking-tight">Gestion</h1>
-        <p className="text-xs text-surface-400 mt-0.5">Pilotage de parcours</p>
+        <h1 className="text-xl font-bold font-heading text-primary-700 tracking-tight">MyCheckList</h1>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

@@ -62,7 +62,7 @@ function KanbanColumn({ status, candidatures, onDragOver }) {
   const items = candidatures.filter(c => c.status === status)
 
   return (
-    <div className="flex-shrink-0 w-72 md:w-auto md:flex-1">
+    <div className="flex-shrink-0 w-60 sm:w-72 md:w-auto md:flex-1">
       <div className="flex items-center gap-2 mb-3 px-1">
         <span className={`w-2 h-2 rounded-full ${statusConfig.dot}`} />
         <h3 className="text-sm font-semibold text-surface-700">{statusConfig.label}</h3>

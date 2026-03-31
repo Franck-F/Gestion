@@ -15,11 +15,11 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 
 function QuickAction({ icon: Icon, label, to, color }) {
   return (
-    <Link to={to} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-surface-200 hover:shadow-md transition-all bg-white">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-        <Icon size={20} />
+    <Link to={to} className="flex flex-col items-center gap-1.5 p-2.5 sm:p-4 rounded-xl border border-surface-200 hover:shadow-md transition-all bg-white">
+      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center ${color}`}>
+        <Icon size={16} />
       </div>
-      <span className="text-xs font-medium text-surface-600 text-center">{label}</span>
+      <span className="text-[10px] sm:text-xs font-medium text-surface-600 text-center truncate w-full">{label}</span>
     </Link>
   )
 }
@@ -27,14 +27,14 @@ function QuickAction({ icon: Icon, label, to, color }) {
 function StatCard({ icon: Icon, label, value, to, color }) {
   return (
     <Link to={to}>
-      <Card hover className="p-4 md:p-5">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-            <Icon size={20} />
+      <Card hover className="p-3 sm:p-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+            <Icon size={16} className="sm:hidden" /><Icon size={20} className="hidden sm:block" />
           </div>
           <div className="min-w-0">
-            <p className="text-2xl font-bold font-heading text-surface-900">{value}</p>
-            <p className="text-xs text-surface-500 truncate">{label}</p>
+            <p className="text-lg sm:text-2xl font-bold font-heading text-surface-900">{value}</p>
+            <p className="text-[10px] sm:text-xs text-surface-500 truncate">{label}</p>
           </div>
         </div>
       </Card>
