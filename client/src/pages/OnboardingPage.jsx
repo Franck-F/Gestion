@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Briefcase, GraduationCap, Target, FileText, ArrowRight, ArrowLeft, Check, Sparkles, Calendar, BookOpen, BarChart3, Heart } from 'lucide-react'
+import { Briefcase, GraduationCap, Target, FileText, ArrowRight, ArrowLeft, Check, Sparkles, Calendar, BarChart3, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { authApi } from '../api/auth.js'
 import { candidaturesApi } from '../api/candidatures.js'
@@ -39,12 +39,23 @@ const SUGGESTED_BOURSES = [
   { name: 'Prime d\'activité', organism: 'CAF', type: 'aide_financiere' },
 ]
 
-const TOTAL_STEPS = 5
+const SUGGESTED_PERSONAL = [
+  { title: 'Passer le permis de conduire', desc: 'Code + conduite' },
+  { title: 'Trouver un logement', desc: 'Recherche appartement' },
+  { title: 'Faire du sport régulièrement', desc: '3 séances par semaine' },
+  { title: 'Apprendre une nouvelle compétence', desc: 'Formation, certif, langue...' },
+  { title: 'Améliorer mon anglais', desc: 'TOEIC, conversation...' },
+  { title: 'Gérer mon budget', desc: 'Suivi des dépenses' },
+  { title: 'Lire plus', desc: '1 livre par mois' },
+  { title: 'Prendre soin de ma santé', desc: 'Rendez-vous médicaux, sommeil...' },
+]
 
-function StepIndicator({ current }) {
+// ─── Shared UI ───
+
+function StepIndicator({ current, total }) {
   return (
     <div className="flex items-center gap-1.5 justify-center mb-8">
-      {Array.from({ length: TOTAL_STEPS - 1 }).map((_, i) => (
+      {Array.from({ length: total }).map((_, i) => (
         <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${
           i < current ? 'w-10 bg-primary-500' : i === current ? 'w-10 bg-primary-300' : 'w-6 bg-surface-200'
         }`} />
@@ -53,7 +64,7 @@ function StepIndicator({ current }) {
   )
 }
 
-function OnboardingShell({ children, step }) {
+function OnboardingShell({ children, step, totalSteps }) {
   return (
     <div className="min-h-dvh bg-gradient-to-br from-primary-50 via-white to-accent-50 flex flex-col">
       <div className="p-4 md:p-6">
@@ -61,7 +72,7 @@ function OnboardingShell({ children, step }) {
       </div>
       <div className="flex-1 flex items-center justify-center px-4 pb-8 md:pb-12">
         <div className="w-full max-w-2xl">
-          {step > 0 && <StepIndicator current={step - 1} />}
+          {step > 0 && <StepIndicator current={step - 1} total={totalSteps - 1} />}
           {children}
         </div>
       </div>
@@ -120,15 +131,14 @@ function StepWelcome({ user, onNext }) {
         MyCheckList organise toutes vos démarches au même endroit.
       </p>
       <p className="text-surface-400 mb-10 max-w-sm mx-auto">
-        Répondez à quelques questions pour personnaliser votre espace. Cela prend moins d'une minute.
+        Répondez à quelques questions pour personnaliser votre espace.
       </p>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-lg mx-auto">
         {[
           { icon: Briefcase, label: 'Candidatures' },
           { icon: GraduationCap, label: 'Bourses' },
           { icon: FileText, label: 'Documents' },
-          { icon: Calendar, label: 'Agenda' },
+          { icon: Heart, label: 'Personnel' },
         ].map(({ icon: Icon, label }) => (
           <div key={label} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/70 border border-surface-200/50">
             <Icon size={22} className="text-primary-500" />
@@ -136,7 +146,6 @@ function StepWelcome({ user, onNext }) {
           </div>
         ))}
       </div>
-
       <Button onClick={onNext} size="lg" className="px-10">
         C'est parti <ArrowRight size={18} />
       </Button>
@@ -183,12 +192,7 @@ function StepGoals({ selectedGoals, toggleGoal, onNext, onBack }) {
 }
 
 // ─── STEP 2 : First candidature ───
-function StepCandidature({ selectedGoals, firstCompany, setFirstCompany, firstJob, setFirstJob, onNext, onBack }) {
-  const needsCandidature = selectedGoals.some(g => ['alternance', 'stage', 'emploi'].includes(g))
-  if (!needsCandidature) { onNext(); return null }
-
-  const goalLabel = selectedGoals.includes('stage') ? 'stage' : selectedGoals.includes('emploi') ? 'premier emploi' : 'alternance'
-
+function StepCandidature({ firstCompany, setFirstCompany, firstJob, setFirstJob, onNext, onBack }) {
   return (
     <div>
       <div className="text-center mb-8">
@@ -196,25 +200,14 @@ function StepCandidature({ selectedGoals, firstCompany, setFirstCompany, firstJo
           <Briefcase size={26} className="text-primary-600" />
         </div>
         <h2 className="text-2xl md:text-3xl font-bold font-heading text-surface-900 mb-2">
-          Votre recherche de {goalLabel}
+          Votre première candidature
         </h2>
-        <p className="text-surface-400">Avez-vous déjà une entreprise en tête ? Vous pourrez en ajouter d'autres après.</p>
+        <p className="text-surface-400">Avez-vous déjà une entreprise en tête ?</p>
       </div>
       <div className="max-w-md mx-auto space-y-4">
-        <Input
-          label="Nom de l'entreprise"
-          placeholder="ex: Google, Capgemini, BNP Paribas..."
-          value={firstCompany}
-          onChange={e => setFirstCompany(e.target.value)}
-          autoComplete="organization"
-        />
-        <Input
-          label="Poste visé"
-          placeholder="ex: Développeur Full Stack, Chef de projet..."
-          value={firstJob}
-          onChange={e => setFirstJob(e.target.value)}
-        />
-        <p className="text-xs text-surface-400 text-center">Ces champs sont optionnels. Vous pourrez ajouter des candidatures plus tard.</p>
+        <Input label="Nom de l'entreprise" placeholder="ex: Google, Capgemini..." value={firstCompany} onChange={e => setFirstCompany(e.target.value)} autoComplete="organization" />
+        <Input label="Poste visé" placeholder="ex: Développeur Full Stack..." value={firstJob} onChange={e => setFirstJob(e.target.value)} />
+        <p className="text-xs text-surface-400 text-center">Optionnel. Vous pourrez en ajouter d'autres après.</p>
       </div>
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
@@ -222,10 +215,7 @@ function StepCandidature({ selectedGoals, firstCompany, setFirstCompany, firstJo
 }
 
 // ─── STEP 3 : Bourses ───
-function StepBourses({ selectedGoals, selectedBourses, toggleBourse, onNext, onBack }) {
-  const needsBourses = selectedGoals.includes('bourses')
-  if (!needsBourses) { onNext(); return null }
-
+function StepBourses({ selectedBourses, toggleBourse, onNext, onBack }) {
   return (
     <div>
       <div className="text-center mb-8">
@@ -239,13 +229,7 @@ function StepBourses({ selectedGoals, selectedBourses, toggleBourse, onNext, onB
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto">
         {SUGGESTED_BOURSES.map(b => (
-          <CheckItem
-            key={b.name}
-            selected={selectedBourses.includes(b.name)}
-            onClick={() => toggleBourse(b.name)}
-            label={b.name}
-            sub={b.organism}
-          />
+          <CheckItem key={b.name} selected={selectedBourses.includes(b.name)} onClick={() => toggleBourse(b.name)} label={b.name} sub={b.organism} />
         ))}
       </div>
       <NavButtons onBack={onBack} onNext={onNext} />
@@ -253,7 +237,30 @@ function StepBourses({ selectedGoals, selectedBourses, toggleBourse, onNext, onB
   )
 }
 
-// ─── STEP 4 : Documents ───
+// ─── STEP 4 : Personal objectives ───
+function StepPersonal({ selectedPersonal, togglePersonal, onNext, onBack }) {
+  return (
+    <div>
+      <div className="text-center mb-8">
+        <div className="w-14 h-14 rounded-xl bg-pink-100 flex items-center justify-center mx-auto mb-4">
+          <Heart size={26} className="text-pink-600" />
+        </div>
+        <h2 className="text-2xl md:text-3xl font-bold font-heading text-surface-900 mb-2">
+          Objectifs personnels
+        </h2>
+        <p className="text-surface-400">Quels projets personnels souhaitez-vous suivre ?</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto">
+        {SUGGESTED_PERSONAL.map(p => (
+          <CheckItem key={p.title} selected={selectedPersonal.includes(p.title)} onClick={() => togglePersonal(p.title)} label={p.title} sub={p.desc} />
+        ))}
+      </div>
+      <NavButtons onBack={onBack} onNext={onNext} />
+    </div>
+  )
+}
+
+// ─── STEP 5 : Documents ───
 function StepDocuments({ selectedDocs, toggleDoc, onNext, onBack, loading }) {
   return (
     <div>
@@ -268,12 +275,7 @@ function StepDocuments({ selectedDocs, toggleDoc, onNext, onBack, loading }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto">
         {SUGGESTED_DOCS.map(doc => (
-          <CheckItem
-            key={doc.name}
-            selected={selectedDocs.includes(doc.name)}
-            onClick={() => toggleDoc(doc.name)}
-            label={doc.name}
-          />
+          <CheckItem key={doc.name} selected={selectedDocs.includes(doc.name)} onClick={() => toggleDoc(doc.name)} label={doc.name} />
         ))}
       </div>
       <div className="flex items-center justify-between mt-8">
@@ -299,59 +301,71 @@ export function OnboardingPage() {
   const [firstJob, setFirstJob] = useState('')
   const [selectedDocs, setSelectedDocs] = useState(['CV', 'Lettre de motivation'])
   const [selectedBourses, setSelectedBourses] = useState([])
+  const [selectedPersonal, setSelectedPersonal] = useState([])
   const [loading, setLoading] = useState(false)
 
   const toggleGoal = (id) => setSelectedGoals(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id])
   const toggleDoc = (name) => setSelectedDocs(prev => prev.includes(name) ? prev.filter(d => d !== name) : [...prev, name])
   const toggleBourse = (name) => setSelectedBourses(prev => prev.includes(name) ? prev.filter(b => b !== name) : [...prev, name])
+  const togglePersonal = (title) => setSelectedPersonal(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title])
 
-  // Steps that get skipped if not relevant
-  const goToStep = (target) => {
-    if (target === 2 && !selectedGoals.some(g => ['alternance', 'stage', 'emploi'].includes(g))) {
-      // Skip candidature step
-      if (target > step) return goToStep(3)
-    }
-    if (target === 3 && !selectedGoals.includes('bourses')) {
-      // Skip bourses step
-      if (target > step) return goToStep(4)
-      if (target < step) return goToStep(2)
-    }
-    setStep(target)
-  }
+  const needsCandidature = selectedGoals.some(g => ['alternance', 'stage', 'emploi'].includes(g))
+  const needsBourses = selectedGoals.includes('bourses')
+  const needsPersonal = selectedGoals.includes('personnel')
+
+  // Build dynamic step list
+  const steps = ['welcome', 'goals']
+  if (needsCandidature) steps.push('candidature')
+  if (needsBourses) steps.push('bourses')
+  if (needsPersonal) steps.push('personal')
+  steps.push('documents')
+
+  const currentStepName = steps[step] || 'welcome'
+
+  const goNext = () => setStep(prev => Math.min(prev + 1, steps.length - 1))
+  const goBack = () => setStep(prev => Math.max(prev - 1, 0))
 
   const handleComplete = async () => {
     setLoading(true)
     try {
+      // Candidature
       if (firstCompany.trim()) {
         const jobLabel = selectedGoals.includes('stage') ? 'Stage' : selectedGoals.includes('emploi') ? 'Emploi' : 'Alternance'
-        await candidaturesApi.create({
-          companyName: firstCompany.trim(),
-          jobTitle: firstJob.trim() || jobLabel,
-          status: 'A_POSTULER',
-        })
+        await candidaturesApi.create({ companyName: firstCompany.trim(), jobTitle: firstJob.trim() || jobLabel, status: 'A_POSTULER' })
       }
 
+      // Bourses
       for (const bourseName of selectedBourses) {
         const b = SUGGESTED_BOURSES.find(s => s.name === bourseName)
         await boursesApi.create({ name: bourseName, organism: b?.organism || '', type: b?.type || 'bourse', status: 'RECHERCHE' })
       }
 
+      // Documents
       for (const docName of selectedDocs) {
         const doc = SUGGESTED_DOCS.find(d => d.name === docName)
         await documentsApi.create({ name: docName, category: doc?.category || 'professional', status: 'A_FAIRE' })
       }
 
+      // Objectives from goals
+      const goalObjectives = {
+        alternance: { title: 'Trouver une alternance', description: 'Décrocher un contrat d\'alternance', category: 'career' },
+        stage: { title: 'Trouver un stage', description: 'Obtenir une convention de stage', category: 'career' },
+        emploi: { title: 'Décrocher un premier emploi', description: 'Signer un contrat de travail', category: 'career' },
+        bourses: { title: 'Obtenir mes bourses et aides', description: 'Compléter et soumettre tous les dossiers', category: 'financial' },
+      }
       for (const goal of selectedGoals) {
-        const map = {
-          alternance: { title: 'Trouver une alternance', description: 'Décrocher un contrat d\'alternance', category: 'career' },
-          stage: { title: 'Trouver un stage', description: 'Obtenir une convention de stage', category: 'career' },
-          emploi: { title: 'Décrocher un premier emploi', description: 'Signer un contrat de travail', category: 'career' },
-          bourses: { title: 'Obtenir mes bourses et aides', description: 'Compléter et soumettre tous les dossiers', category: 'financial' },
-          personnel: { title: 'Objectifs personnels', description: 'Permis, logement, sport, bien-être...', category: 'personal' },
+        if (goal !== 'personnel' && goalObjectives[goal]) {
+          await objectivesApi.create({ ...goalObjectives[goal], status: 'IN_PROGRESS' })
         }
-        if (map[goal]) await objectivesApi.create({ ...map[goal], status: 'IN_PROGRESS' })
       }
 
+      // Personal objectives
+      for (const title of selectedPersonal) {
+        const p = SUGGESTED_PERSONAL.find(s => s.title === title)
+        await objectivesApi.create({ title, description: p?.desc || '', category: 'personal', status: 'IN_PROGRESS' })
+      }
+
+      // Complete onboarding
       const { data: updatedUser } = await authApi.completeOnboarding({ goalType: selectedGoals.join(',') })
       updateUser(updatedUser)
       toast('Votre espace est prêt !', 'success')
@@ -364,12 +378,13 @@ export function OnboardingPage() {
   }
 
   return (
-    <OnboardingShell step={step}>
-      {step === 0 && <StepWelcome user={user} onNext={() => setStep(1)} />}
-      {step === 1 && <StepGoals selectedGoals={selectedGoals} toggleGoal={toggleGoal} onNext={() => goToStep(2)} onBack={() => setStep(0)} />}
-      {step === 2 && <StepCandidature selectedGoals={selectedGoals} firstCompany={firstCompany} setFirstCompany={setFirstCompany} firstJob={firstJob} setFirstJob={setFirstJob} onNext={() => goToStep(3)} onBack={() => setStep(1)} />}
-      {step === 3 && <StepBourses selectedGoals={selectedGoals} selectedBourses={selectedBourses} toggleBourse={toggleBourse} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />}
-      {step === 4 && <StepDocuments selectedDocs={selectedDocs} toggleDoc={toggleDoc} onNext={handleComplete} onBack={() => goToStep(3)} loading={loading} />}
+    <OnboardingShell step={step} totalSteps={steps.length}>
+      {currentStepName === 'welcome' && <StepWelcome user={user} onNext={goNext} />}
+      {currentStepName === 'goals' && <StepGoals selectedGoals={selectedGoals} toggleGoal={toggleGoal} onNext={goNext} onBack={goBack} />}
+      {currentStepName === 'candidature' && <StepCandidature firstCompany={firstCompany} setFirstCompany={setFirstCompany} firstJob={firstJob} setFirstJob={setFirstJob} onNext={goNext} onBack={goBack} />}
+      {currentStepName === 'bourses' && <StepBourses selectedBourses={selectedBourses} toggleBourse={toggleBourse} onNext={goNext} onBack={goBack} />}
+      {currentStepName === 'personal' && <StepPersonal selectedPersonal={selectedPersonal} togglePersonal={togglePersonal} onNext={goNext} onBack={goBack} />}
+      {currentStepName === 'documents' && <StepDocuments selectedDocs={selectedDocs} toggleDoc={toggleDoc} onNext={handleComplete} onBack={goBack} loading={loading} />}
     </OnboardingShell>
   )
 }

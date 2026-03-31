@@ -66,13 +66,19 @@ model User {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  candidatures  Candidature[]
-  bourses       Bourse[]
-  objectives    Objective[]
-  documents     Document[]
-  events        Event[]
-  notes         Note[]
+  // Notification preferences
+  notifyEmail       Boolean @default(true)
+  notifyPush        Boolean @default(true)
+  pushSubscription  String?
+
+  refreshTokens   RefreshToken[]
+  candidatures    Candidature[]
+  bourses         Bourse[]
+  objectives      Objective[]
+  documents       Document[]
+  events          Event[]
+  notes           Note[]
+  notifications   Notification[]
 
   @@map("users")
 }
@@ -310,4 +316,24 @@ model Note {
   @@index([userId])
   @@index([userId, candidatureId])
   @@map("notes")
+}
+
+// ===================== NOTIFICATIONS =====================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info")
+  link      String?
+  read      Boolean  @default(false)
+  sentEmail Boolean  @default(false)
+  sentPush  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

@@ -4,6 +4,7 @@ import {
   FileText, Calendar, BookOpen, Settings, LogOut
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { NotificationBell } from './NotificationBell.jsx'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -45,6 +46,10 @@ export function Sidebar() {
       </nav>
 
       <div className="px-3 py-4 border-t border-surface-100 space-y-1">
+        <div className="flex items-center justify-between px-3 py-2">
+          <span className="text-sm font-medium text-surface-600">Notifications</span>
+          <NotificationBell />
+        </div>
         <NavLink
           to="/settings"
           className={({ isActive }) =>

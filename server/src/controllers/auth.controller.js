@@ -1,6 +1,8 @@
 import { OAuth2Client } from 'google-auth-library'
 import prisma from '../config/database.js'
 import env from '../config/env.js'
+import { sendEmail, templateWelcome } from '../services/email.service.js'
+import { createNotification } from '../services/notification.service.js'
 import {
   hashPassword,
   verifyPassword,
@@ -40,6 +42,10 @@ export async function register(req, res, next) {
 
     res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS)
     res.status(201).json({ accessToken, user: sanitizeUser(user) })
+
+    // Send welcome email in background
+    const tpl = templateWelcome({ userName: firstName })
+    sendEmail({ to: email, ...tpl }).catch(() => {})
   } catch (err) {
     next(err)
   }
@@ -114,6 +120,10 @@ export async function googleAuth(req, res, next) {
           },
         })
         isNewUser = true
+
+        // Welcome email for new Google users
+        const tpl = templateWelcome({ userName: given_name || '' })
+        sendEmail({ to: email, ...tpl }).catch(() => {})
       }
     }
 
