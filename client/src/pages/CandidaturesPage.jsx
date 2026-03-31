@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, BarChart3 } from 'lucide-react'
+import { Plus, Search, BarChart3, Briefcase } from 'lucide-react'
 import { candidaturesApi } from '../api/candidatures.js'
 import { PageHeader } from '../components/layout/PageHeader.jsx'
 import { Button } from '../components/ui/Button.jsx'
