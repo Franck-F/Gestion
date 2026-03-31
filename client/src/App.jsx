@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { ToastProvider } from './components/ui/Toast.jsx'
 import { ProtectedRoute } from './components/auth/ProtectedRoute.jsx'
 import { AppLayout } from './components/layout/AppLayout.jsx'
@@ -33,8 +34,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ToastProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -53,8 +55,9 @@ export default function App() {
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </ToastProvider>
-        </AuthProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </BrowserRouter>
   )
