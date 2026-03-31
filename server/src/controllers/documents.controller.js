@@ -1,9 +1,24 @@
 import multer from 'multer'
 import * as service from '../services/documents.service.js'
 
+const ALLOWED_MIMES = [
+  'application/pdf',
+  'image/jpeg', 'image/png', 'image/webp',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+]
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMES.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Type de fichier non autorisé. Formats acceptés : PDF, images, Word, Excel, texte.'))
+    }
+  },
 })
 
 export { upload }

@@ -2,8 +2,8 @@ import * as service from '../services/candidatures.service.js'
 
 export async function list(req, res, next) {
   try {
-    const { status, search } = req.query
-    const data = await service.listCandidatures(req.userId, { status, search })
+    const { status, search, page, limit } = req.query
+    const data = await service.listCandidatures(req.userId, { status, search, page, limit })
     res.json(data)
   } catch (err) { next(err) }
 }

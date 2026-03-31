@@ -23,13 +23,13 @@ export async function createEvent(userId, data) {
 }
 
 export async function updateEvent(userId, id, data) {
-  await prisma.event.findFirstOrThrow({ where: { id, userId } })
-  return prisma.event.update({ where: { id }, data })
+  const record = await prisma.event.findFirstOrThrow({ where: { id, userId } })
+  return prisma.event.update({ where: { id: record.id }, data })
 }
 
 export async function deleteEvent(userId, id) {
-  await prisma.event.findFirstOrThrow({ where: { id, userId } })
-  return prisma.event.delete({ where: { id } })
+  const record = await prisma.event.findFirstOrThrow({ where: { id, userId } })
+  return prisma.event.delete({ where: { id: record.id } })
 }
 
 export async function getAggregatedDeadlines(userId) {

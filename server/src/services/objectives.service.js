@@ -20,17 +20,17 @@ export async function createObjective(userId, data) {
 }
 
 export async function updateObjective(userId, id, data) {
-  await prisma.objective.findFirstOrThrow({ where: { id, userId } })
+  const record = await prisma.objective.findFirstOrThrow({ where: { id, userId } })
   return prisma.objective.update({
-    where: { id },
+    where: { id: record.id },
     data,
     include: { milestones: { orderBy: { sortOrder: 'asc' } } },
   })
 }
 
 export async function deleteObjective(userId, id) {
-  await prisma.objective.findFirstOrThrow({ where: { id, userId } })
-  return prisma.objective.delete({ where: { id } })
+  const record = await prisma.objective.findFirstOrThrow({ where: { id, userId } })
+  return prisma.objective.delete({ where: { id: record.id } })
 }
 
 export async function checkIn(userId, id) {
@@ -54,7 +54,7 @@ export async function checkIn(userId, id) {
   const streakBest = Math.max(obj.streakBest, streakCurrent)
 
   return prisma.objective.update({
-    where: { id },
+    where: { id: obj.id },
     data: { streakCurrent, streakBest, lastCheckIn: new Date(), status: 'IN_PROGRESS' },
     include: { milestones: { orderBy: { sortOrder: 'asc' } } },
   })
@@ -70,19 +70,27 @@ export async function createMilestone(userId, objectiveId, data) {
 
 export async function updateMilestone(userId, objectiveId, milestoneId, data) {
   await prisma.objective.findFirstOrThrow({ where: { id: objectiveId, userId } })
+  const milestone = await prisma.milestone.findFirstOrThrow({ where: { id: milestoneId, objectiveId } })
   const updateData = { ...data }
   if (data.completed === true) updateData.completedAt = new Date()
   if (data.completed === false) updateData.completedAt = null
-  return prisma.milestone.update({ where: { id: milestoneId }, data: updateData })
+  return prisma.milestone.update({ where: { id: milestone.id }, data: updateData })
 }
 
 export async function deleteMilestone(userId, objectiveId, milestoneId) {
   await prisma.objective.findFirstOrThrow({ where: { id: objectiveId, userId } })
-  return prisma.milestone.delete({ where: { id: milestoneId } })
+  const milestone = await prisma.milestone.findFirstOrThrow({ where: { id: milestoneId, objectiveId } })
+  return prisma.milestone.delete({ where: { id: milestone.id } })
 }
 
 export async function reorderMilestones(userId, objectiveId, milestoneIds) {
   await prisma.objective.findFirstOrThrow({ where: { id: objectiveId, userId } })
+  // Verify all milestones belong to this objective
+  const milestones = await prisma.milestone.findMany({ where: { objectiveId } })
+  const validIds = new Set(milestones.map(m => m.id))
+  for (const id of milestoneIds) {
+    if (!validIds.has(id)) throw new Error('Milestone does not belong to this objective')
+  }
   const updates = milestoneIds.map((id, index) =>
     prisma.milestone.update({ where: { id }, data: { sortOrder: index } })
   )

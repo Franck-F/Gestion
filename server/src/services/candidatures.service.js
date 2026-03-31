@@ -1,6 +1,6 @@
 import prisma from '../config/database.js'
 
-export async function listCandidatures(userId, { status, search }) {
+export async function listCandidatures(userId, { status, search, page = 1, limit = 50 }) {
   const where = { userId }
   if (status) where.status = status
   if (search) {
@@ -10,11 +10,18 @@ export async function listCandidatures(userId, { status, search }) {
       { location: { contains: search, mode: 'insensitive' } },
     ]
   }
-  return prisma.candidature.findMany({
-    where,
-    include: { contacts: true, _count: { select: { attachments: true, notes: true } } },
-    orderBy: { updatedAt: 'desc' },
-  })
+  const skip = (Math.max(1, parseInt(page)) - 1) * parseInt(limit)
+  const [data, total] = await Promise.all([
+    prisma.candidature.findMany({
+      where,
+      include: { contacts: true, _count: { select: { attachments: true, notes: true } } },
+      orderBy: { updatedAt: 'desc' },
+      skip,
+      take: parseInt(limit),
+    }),
+    prisma.candidature.count({ where }),
+  ])
+  return { data, total, page: parseInt(page), limit: parseInt(limit) }
 }
 
 export async function getCandidature(userId, id) {
@@ -43,13 +50,13 @@ export async function createCandidature(userId, data) {
 }
 
 export async function updateCandidature(userId, id, data) {
-  await prisma.candidature.findFirstOrThrow({ where: { id, userId } })
-  return prisma.candidature.update({ where: { id }, data })
+  const record = await prisma.candidature.findFirstOrThrow({ where: { id, userId } })
+  return prisma.candidature.update({ where: { id: record.id }, data })
 }
 
 export async function deleteCandidature(userId, id) {
-  await prisma.candidature.findFirstOrThrow({ where: { id, userId } })
-  return prisma.candidature.delete({ where: { id } })
+  const record = await prisma.candidature.findFirstOrThrow({ where: { id, userId } })
+  return prisma.candidature.delete({ where: { id: record.id } })
 }
 
 export async function updateStatus(userId, id, newStatus) {
@@ -57,7 +64,7 @@ export async function updateStatus(userId, id, newStatus) {
   const oldStatus = candidature.status
 
   const updated = await prisma.candidature.update({
-    where: { id },
+    where: { id: candidature.id },
     data: {
       status: newStatus,
       appliedAt: newStatus === 'POSTULE' && !candidature.appliedAt ? new Date() : candidature.appliedAt,
@@ -79,22 +86,28 @@ export async function updateStatus(userId, id, newStatus) {
 }
 
 export async function getStats(userId) {
-  const candidatures = await prisma.candidature.findMany({ where: { userId } })
-  const total = candidatures.length
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+  const [grouped, total, thisWeek] = await Promise.all([
+    prisma.candidature.groupBy({
+      by: ['status'],
+      where: { userId },
+      _count: true,
+    }),
+    prisma.candidature.count({ where: { userId } }),
+    prisma.candidature.count({ where: { userId, appliedAt: { gte: oneWeekAgo } } }),
+  ])
+
   const byStatus = {}
-  for (const c of candidatures) {
-    byStatus[c.status] = (byStatus[c.status] || 0) + 1
+  let withResponse = 0
+  let applied = 0
+  for (const g of grouped) {
+    byStatus[g.status] = g._count
+    if (['ENTRETIEN', 'OFFRE', 'REFUS'].includes(g.status)) withResponse += g._count
+    if (g.status !== 'A_POSTULER') applied += g._count
   }
 
-  const withResponse = candidatures.filter(c =>
-    ['ENTRETIEN', 'OFFRE', 'REFUS'].includes(c.status)
-  ).length
-  const applied = candidatures.filter(c => c.status !== 'A_POSTULER').length
   const responseRate = applied > 0 ? Math.round((withResponse / applied) * 100) : 0
-
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  const thisWeek = candidatures.filter(c => c.appliedAt && new Date(c.appliedAt) >= oneWeekAgo).length
-
   return { total, byStatus, responseRate, thisWeek }
 }
 
@@ -122,10 +135,12 @@ export async function createContact(userId, candidatureId, data) {
 
 export async function updateContact(userId, candidatureId, contactId, data) {
   await prisma.candidature.findFirstOrThrow({ where: { id: candidatureId, userId } })
-  return prisma.contact.update({ where: { id: contactId }, data })
+  const contact = await prisma.contact.findFirstOrThrow({ where: { id: contactId, candidatureId } })
+  return prisma.contact.update({ where: { id: contact.id }, data })
 }
 
 export async function deleteContact(userId, candidatureId, contactId) {
   await prisma.candidature.findFirstOrThrow({ where: { id: candidatureId, userId } })
-  return prisma.contact.delete({ where: { id: contactId } })
+  const contact = await prisma.contact.findFirstOrThrow({ where: { id: contactId, candidatureId } })
+  return prisma.contact.delete({ where: { id: contact.id } })
 }

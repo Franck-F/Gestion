@@ -32,8 +32,8 @@ export async function createDocument(userId, data) {
 }
 
 export async function updateDocument(userId, id, data) {
-  await prisma.document.findFirstOrThrow({ where: { id, userId } })
-  return prisma.document.update({ where: { id }, data })
+  const record = await prisma.document.findFirstOrThrow({ where: { id, userId } })
+  return prisma.document.update({ where: { id: record.id }, data })
 }
 
 export async function deleteDocument(userId, id) {
@@ -44,7 +44,7 @@ export async function deleteDocument(userId, id) {
   for (const v of doc.versions) {
     await deleteFile(v.filePath).catch(() => {})
   }
-  return prisma.document.delete({ where: { id } })
+  return prisma.document.delete({ where: { id: doc.id } })
 }
 
 export async function addVersion(userId, documentId, file, versionLabel) {
@@ -64,7 +64,7 @@ export async function addVersion(userId, documentId, file, versionLabel) {
 
 export async function deleteVersion(userId, documentId, versionId) {
   await prisma.document.findFirstOrThrow({ where: { id: documentId, userId } })
-  const version = await prisma.documentVersion.findFirstOrThrow({ where: { id: versionId } })
+  const version = await prisma.documentVersion.findFirstOrThrow({ where: { id: versionId, documentId } })
   await deleteFile(version.filePath).catch(() => {})
-  return prisma.documentVersion.delete({ where: { id: versionId } })
+  return prisma.documentVersion.delete({ where: { id: version.id } })
 }

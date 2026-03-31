@@ -86,7 +86,7 @@ export function CandidaturesPage() {
 
   const { data: candidatures = [], isLoading } = useQuery({
     queryKey: ['candidatures', { search }],
-    queryFn: () => candidaturesApi.list({ search: search || undefined }).then(r => r.data),
+    queryFn: () => candidaturesApi.list({ search: search || undefined, limit: 200 }).then(r => r.data?.data || r.data),
   })
 
   const { data: stats } = useQuery({

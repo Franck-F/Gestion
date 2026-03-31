@@ -33,23 +33,23 @@ export async function createNote(userId, data) {
 }
 
 export async function updateNote(userId, id, data) {
-  await prisma.note.findFirstOrThrow({ where: { id, userId } })
+  const record = await prisma.note.findFirstOrThrow({ where: { id, userId } })
   return prisma.note.update({
-    where: { id },
+    where: { id: record.id },
     data,
     include: { candidature: { select: { id: true, companyName: true, jobTitle: true } } },
   })
 }
 
 export async function deleteNote(userId, id) {
-  await prisma.note.findFirstOrThrow({ where: { id, userId } })
-  return prisma.note.delete({ where: { id } })
+  const record = await prisma.note.findFirstOrThrow({ where: { id, userId } })
+  return prisma.note.delete({ where: { id: record.id } })
 }
 
 export async function togglePin(userId, id) {
   const note = await prisma.note.findFirstOrThrow({ where: { id, userId } })
   return prisma.note.update({
-    where: { id },
+    where: { id: note.id },
     data: { isPinned: !note.isPinned },
   })
 }

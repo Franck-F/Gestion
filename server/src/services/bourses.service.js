@@ -20,13 +20,13 @@ export async function createBourse(userId, data) {
 }
 
 export async function updateBourse(userId, id, data) {
-  await prisma.bourse.findFirstOrThrow({ where: { id, userId } })
-  return prisma.bourse.update({ where: { id }, data })
+  const record = await prisma.bourse.findFirstOrThrow({ where: { id, userId } })
+  return prisma.bourse.update({ where: { id: record.id }, data })
 }
 
 export async function deleteBourse(userId, id) {
-  await prisma.bourse.findFirstOrThrow({ where: { id, userId } })
-  return prisma.bourse.delete({ where: { id } })
+  const record = await prisma.bourse.findFirstOrThrow({ where: { id, userId } })
+  return prisma.bourse.delete({ where: { id: record.id } })
 }
 
 export async function addBourseDoc(userId, bourseId, data) {
@@ -36,10 +36,12 @@ export async function addBourseDoc(userId, bourseId, data) {
 
 export async function updateBourseDoc(userId, bourseId, docId, data) {
   await prisma.bourse.findFirstOrThrow({ where: { id: bourseId, userId } })
-  return prisma.bourseDocument.update({ where: { id: docId }, data })
+  const doc = await prisma.bourseDocument.findFirstOrThrow({ where: { id: docId, bourseId } })
+  return prisma.bourseDocument.update({ where: { id: doc.id }, data })
 }
 
 export async function deleteBourseDoc(userId, bourseId, docId) {
   await prisma.bourse.findFirstOrThrow({ where: { id: bourseId, userId } })
-  return prisma.bourseDocument.delete({ where: { id: docId } })
+  const doc = await prisma.bourseDocument.findFirstOrThrow({ where: { id: docId, bourseId } })
+  return prisma.bourseDocument.delete({ where: { id: doc.id } })
 }

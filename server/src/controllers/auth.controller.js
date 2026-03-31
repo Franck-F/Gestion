@@ -99,11 +99,17 @@ export async function googleAuth(req, res, next) {
     let isNewUser = false
 
     if (!user) {
-      // 2. Find by email (link accounts)
+      // 2. Find by email
       user = await prisma.user.findUnique({ where: { email } })
 
       if (user) {
-        // Existing user — link Google account
+        // Existing user with password — don't auto-link (security risk)
+        // Only link if user has no password (was created via Google previously, edge case)
+        if (user.passwordHash) {
+          return res.status(409).json({
+            error: 'Un compte avec cet email existe déjà. Connectez-vous avec votre mot de passe.',
+          })
+        }
         user = await prisma.user.update({
           where: { id: user.id },
           data: { googleId, avatarUrl: user.avatarUrl || picture },
