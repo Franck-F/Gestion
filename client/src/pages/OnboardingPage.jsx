@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Briefcase, GraduationCap, Target, FileText, ArrowRight, ArrowLeft, Check, Sparkles, Calendar, BookOpen, BarChart3 } from 'lucide-react'
+import { Briefcase, GraduationCap, Target, FileText, ArrowRight, ArrowLeft, Check, Sparkles, Calendar, BookOpen, BarChart3, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { authApi } from '../api/auth.js'
 import { candidaturesApi } from '../api/candidatures.js'
@@ -16,6 +16,7 @@ const GOALS = [
   { id: 'stage', icon: Target, label: 'Stage', desc: 'Je recherche un stage en entreprise' },
   { id: 'emploi', icon: BarChart3, label: 'Premier emploi', desc: 'Je cherche mon premier poste après mes études' },
   { id: 'bourses', icon: GraduationCap, label: 'Bourses & aides', desc: 'Je veux suivre mes demandes de financement' },
+  { id: 'personnel', icon: Heart, label: 'Personnel', desc: 'Permis, logement, sport, bien-être...' },
 ]
 
 const SUGGESTED_DOCS = [
@@ -346,6 +347,7 @@ export function OnboardingPage() {
           stage: { title: 'Trouver un stage', description: 'Obtenir une convention de stage', category: 'career' },
           emploi: { title: 'Décrocher un premier emploi', description: 'Signer un contrat de travail', category: 'career' },
           bourses: { title: 'Obtenir mes bourses et aides', description: 'Compléter et soumettre tous les dossiers', category: 'financial' },
+          personnel: { title: 'Objectifs personnels', description: 'Permis, logement, sport, bien-être...', category: 'personal' },
         }
         if (map[goal]) await objectivesApi.create({ ...map[goal], status: 'IN_PROGRESS' })
       }
