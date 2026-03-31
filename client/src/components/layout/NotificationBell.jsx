@@ -70,9 +70,9 @@ export function NotificationBell() {
 
       {/* Fullscreen modal — works on ALL screen sizes */}
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-end md:items-center md:justify-center">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative w-full md:w-[28rem] md:max-w-lg bg-white rounded-t-2xl md:rounded-2xl shadow-xl max-h-[85vh] flex flex-col animate-slide-up md:animate-fade-in">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl max-h-[85dvh] flex flex-col animate-fade-in">
             {/* Header */}
             <div className="px-5 py-4 border-b border-surface-100 flex items-center justify-between flex-shrink-0">
               <h3 className="font-semibold text-surface-900 font-heading">Notifications</h3>
