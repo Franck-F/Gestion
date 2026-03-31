@@ -39,7 +39,7 @@ export function RegisterPage() {
             <h2 className="text-2xl font-bold font-heading text-surface-900">Inscription</h2>
             <p className="mt-1 text-surface-500 text-sm">Prêt en moins d'une minute</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 p-6 sm:p-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 p-6 md:p-8">
             <RegisterForm />
           </div>
         </div>

@@ -37,13 +37,13 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-6 md:hidden">
             <h1 className="text-2xl font-bold font-heading text-primary-800">MyCheckList</h1>
-            <p className="mt-1 text-surface-500 text-xs">Organisez vos démarches</p>
+            <p className="mt-1 text-surface-500 text-sm">Organisez vos démarches</p>
           </div>
           <div className="md:mb-8 hidden md:block">
             <h2 className="text-2xl font-bold font-heading text-surface-900">Connexion</h2>
             <p className="mt-1 text-surface-500 text-sm">Accédez à votre espace personnel</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 p-5 sm:p-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 p-6 md:p-8">
             <LoginForm />
           </div>
         </div>

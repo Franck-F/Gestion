@@ -38,7 +38,7 @@ export function RegisterForm() {
       {error && (
         <div className="p-3 rounded-lg bg-danger-50 text-danger-600 text-sm">{error}</div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <Input
           label="Prénom"
           placeholder="Jean"
