@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, CheckCheck, ExternalLink, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -14,7 +14,6 @@ const TYPE_COLORS = {
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -40,25 +39,25 @@ export function NotificationBell() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   })
 
+  // Lock body scroll when open on mobile
   useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    if (open) document.body.style.overflow = 'hidden'
+    else document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
   }, [open])
 
   const count = countData?.count || 0
 
-  const handleClick = (notif) => {
+  const handleNotifClick = (notif) => {
     if (!notif.read) markReadMutation.mutate(notif.id)
-    if (notif.link) { navigate(notif.link); setOpen(false) }
+    if (notif.link) navigate(notif.link)
+    setOpen(false)
   }
 
   return (
-    <div ref={ref}>
+    <>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen(true)}
         className="relative p-1.5 rounded-lg hover:bg-surface-100 transition-colors cursor-pointer"
       >
         <Bell size={20} className="text-surface-600" />
@@ -69,80 +68,58 @@ export function NotificationBell() {
         )}
       </button>
 
+      {/* Fullscreen modal — works on ALL screen sizes */}
       {open && (
-        <>
-          {/* Mobile: fullscreen overlay */}
-          <div className="md:hidden fixed inset-0 z-50 bg-surface-900/30" onClick={() => setOpen(false)} />
-          <div className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-xl max-h-[80vh] flex flex-col animate-slide-up">
-            <NotifContent
-              notifications={notifications}
-              count={count}
-              onClose={() => setOpen(false)}
-              onMarkAllRead={() => markAllReadMutation.mutate()}
-              onClick={handleClick}
-            />
-          </div>
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center md:justify-center">
+          <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="relative w-full md:w-[28rem] md:max-w-lg bg-white rounded-t-2xl md:rounded-2xl shadow-xl max-h-[85vh] flex flex-col animate-slide-up md:animate-fade-in">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-surface-100 flex items-center justify-between flex-shrink-0">
+              <h3 className="font-semibold text-surface-900 font-heading">Notifications</h3>
+              <div className="flex items-center gap-3">
+                {count > 0 && (
+                  <button onClick={() => markAllReadMutation.mutate()} className="text-xs text-primary-600 hover:underline flex items-center gap-1 cursor-pointer">
+                    <CheckCheck size={14} /> Tout lire
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-surface-100 cursor-pointer">
+                  <X size={18} className="text-surface-400" />
+                </button>
+              </div>
+            </div>
 
-          {/* Desktop: dropdown */}
-          <div className="hidden md:flex absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-xl border border-surface-200 z-50 max-h-[70vh] flex-col">
-            <NotifContent
-              notifications={notifications}
-              count={count}
-              onClose={() => setOpen(false)}
-              onMarkAllRead={() => markAllReadMutation.mutate()}
-              onClick={handleClick}
-            />
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function NotifContent({ notifications, count, onClose, onMarkAllRead, onClick }) {
-  return (
-    <>
-      <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between flex-shrink-0">
-        <h3 className="font-semibold text-surface-800 text-sm">Notifications</h3>
-        <div className="flex items-center gap-2">
-          {count > 0 && (
-            <button onClick={onMarkAllRead} className="text-xs text-primary-600 hover:underline flex items-center gap-1 cursor-pointer">
-              <CheckCheck size={14} /> Tout lire
-            </button>
-          )}
-          <button onClick={onClose} className="md:hidden p-1 rounded-lg hover:bg-surface-100 cursor-pointer">
-            <X size={18} className="text-surface-400" />
-          </button>
-        </div>
-      </div>
-      <div className="overflow-y-auto flex-1">
-        {notifications.length === 0 ? (
-          <div className="py-12 text-center">
-            <Bell size={28} className="text-surface-200 mx-auto mb-3" />
-            <p className="text-sm text-surface-400">Aucune notification</p>
-          </div>
-        ) : (
-          <ul>
-            {notifications.map(notif => (
-              <li
-                key={notif.id}
-                onClick={() => onClick(notif)}
-                className={`px-4 py-3 border-b border-surface-50 cursor-pointer hover:bg-surface-50 transition-colors ${!notif.read ? 'bg-primary-50/30' : ''}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${TYPE_COLORS[notif.type] || TYPE_COLORS.info}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm ${!notif.read ? 'font-semibold text-surface-800' : 'text-surface-600'}`}>{notif.title}</p>
-                    <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{notif.message}</p>
-                    <p className="text-xs text-surface-400 mt-1">{formatRelative(notif.createdAt)}</p>
-                  </div>
-                  {notif.link && <ExternalLink size={14} className="text-surface-300 mt-1 flex-shrink-0" />}
+            {/* Content */}
+            <div className="overflow-y-auto flex-1">
+              {notifications.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Bell size={32} className="text-surface-200 mx-auto mb-3" />
+                  <p className="text-surface-400">Aucune notification</p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              ) : (
+                <ul>
+                  {notifications.map(notif => (
+                    <li
+                      key={notif.id}
+                      onClick={() => handleNotifClick(notif)}
+                      className={`px-5 py-4 border-b border-surface-100 cursor-pointer hover:bg-surface-50 transition-colors ${!notif.read ? 'bg-primary-50/40' : ''}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${TYPE_COLORS[notif.type] || TYPE_COLORS.info}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm ${!notif.read ? 'font-semibold text-surface-900' : 'text-surface-600'}`}>{notif.title}</p>
+                          <p className="text-sm text-surface-500 mt-0.5">{notif.message}</p>
+                          <p className="text-xs text-surface-400 mt-1.5">{formatRelative(notif.createdAt)}</p>
+                        </div>
+                        {notif.link && <ExternalLink size={14} className="text-surface-300 mt-1 flex-shrink-0" />}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

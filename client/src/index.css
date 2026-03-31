@@ -82,6 +82,74 @@
   }
 }
 
+/* Dark mode: remap bg-white → dark surface, borders, shadows */
+:root.dark {
+  color-scheme: dark;
+}
+
+:root.dark body {
+  background-color: var(--color-surface-50);
+  color: var(--color-surface-800);
+}
+
+/* Override every bg-white in dark mode */
+:root.dark .bg-white {
+  background-color: var(--color-surface-100) !important;
+}
+
+:root.dark .bg-white\/95 {
+  background-color: rgb(from var(--color-surface-100) r g b / 0.95) !important;
+}
+
+:root.dark .bg-white\/70 {
+  background-color: rgb(from var(--color-surface-100) r g b / 0.7) !important;
+}
+
+/* Borders */
+:root.dark .border-surface-200,
+:root.dark .border-surface-200\/80,
+:root.dark .border-surface-200\/60,
+:root.dark .border-surface-200\/50 {
+  border-color: var(--color-surface-200) !important;
+}
+
+:root.dark .border-surface-100 {
+  border-color: var(--color-surface-200) !important;
+}
+
+:root.dark .border-surface-50 {
+  border-color: var(--color-surface-200) !important;
+}
+
+/* Shadows: muted in dark */
+:root.dark .shadow-lg,
+:root.dark .shadow-xl,
+:root.dark .shadow-md {
+  --tw-shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Inputs */
+:root.dark input,
+:root.dark select,
+:root.dark textarea {
+  background-color: var(--color-surface-100);
+  color: var(--color-surface-800);
+  border-color: var(--color-surface-300);
+}
+
+:root.dark input::placeholder,
+:root.dark textarea::placeholder {
+  color: var(--color-surface-400);
+}
+
+/* Scrollbar */
+:root.dark ::-webkit-scrollbar-track {
+  background: var(--color-surface-100);
+}
+:root.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-surface-300);
+}
+
 @layer utilities {
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;

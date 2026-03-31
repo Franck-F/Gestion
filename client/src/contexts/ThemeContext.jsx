@@ -3,10 +3,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 export const THEMES = {
   ocean: {
     name: 'Océan',
-    colors: {
-      primary: '#2578eb',
-      accent: '#ff5722',
-    },
+    dark: false,
+    colors: { primary: '#2578eb', accent: '#ff5722' },
     vars: {
       '--color-primary-50': '#eff8ff', '--color-primary-100': '#dbeffe', '--color-primary-200': '#bfe3fe',
       '--color-primary-300': '#93d2fd', '--color-primary-400': '#60b8fa', '--color-primary-500': '#3b97f6',
@@ -19,10 +17,8 @@ export const THEMES = {
   },
   emerald: {
     name: 'Émeraude',
-    colors: {
-      primary: '#059669',
-      accent: '#8b5cf6',
-    },
+    dark: false,
+    colors: { primary: '#059669', accent: '#8b5cf6' },
     vars: {
       '--color-primary-50': '#ecfdf5', '--color-primary-100': '#d1fae5', '--color-primary-200': '#a7f3d0',
       '--color-primary-300': '#6ee7b7', '--color-primary-400': '#34d399', '--color-primary-500': '#10b981',
@@ -35,10 +31,8 @@ export const THEMES = {
   },
   sunset: {
     name: 'Coucher de soleil',
-    colors: {
-      primary: '#e11d48',
-      accent: '#f59e0b',
-    },
+    dark: false,
+    colors: { primary: '#e11d48', accent: '#f59e0b' },
     vars: {
       '--color-primary-50': '#fff1f2', '--color-primary-100': '#ffe4e6', '--color-primary-200': '#fecdd3',
       '--color-primary-300': '#fda4af', '--color-primary-400': '#fb7185', '--color-primary-500': '#f43f5e',
@@ -51,10 +45,8 @@ export const THEMES = {
   },
   purple: {
     name: 'Améthyste',
-    colors: {
-      primary: '#7c3aed',
-      accent: '#06b6d4',
-    },
+    dark: false,
+    colors: { primary: '#7c3aed', accent: '#06b6d4' },
     vars: {
       '--color-primary-50': '#f5f3ff', '--color-primary-100': '#ede9fe', '--color-primary-200': '#ddd6fe',
       '--color-primary-300': '#c4b5fd', '--color-primary-400': '#a78bfa', '--color-primary-500': '#8b5cf6',
@@ -68,25 +60,36 @@ export const THEMES = {
   midnight: {
     name: 'Nuit',
     dark: true,
-    colors: {
-      primary: '#60a5fa',
-      accent: '#f472b6',
-    },
+    colors: { primary: '#818cf8', accent: '#f472b6' },
     vars: {
-      '--color-primary-50': '#1e3a5f', '--color-primary-100': '#1e3a5f', '--color-primary-200': '#2563eb',
-      '--color-primary-300': '#3b82f6', '--color-primary-400': '#60a5fa', '--color-primary-500': '#60a5fa',
-      '--color-primary-600': '#3b82f6', '--color-primary-700': '#93bbfd', '--color-primary-800': '#bfdbfe',
-      '--color-primary-900': '#dbeafe', '--color-primary-950': '#eff6ff',
-      '--color-accent-50': '#4a1942', '--color-accent-100': '#831843', '--color-accent-200': '#be185d',
-      '--color-accent-300': '#ec4899', '--color-accent-400': '#f472b6', '--color-accent-500': '#f472b6',
-      '--color-accent-600': '#ec4899', '--color-accent-700': '#f9a8d4', '--color-accent-800': '#fbcfe8',
-      '--color-surface-50': '#0f172a', '--color-surface-100': '#1e293b', '--color-surface-200': '#334155',
-      '--color-surface-300': '#475569', '--color-surface-400': '#64748b', '--color-surface-500': '#94a3b8',
-      '--color-surface-600': '#cbd5e1', '--color-surface-700': '#e2e8f0', '--color-surface-800': '#f1f5f9',
-      '--color-surface-900': '#f8fafc', '--color-surface-950': '#ffffff',
+      '--color-primary-50': '#1e1b4b', '--color-primary-100': '#312e81', '--color-primary-200': '#3730a3',
+      '--color-primary-300': '#4f46e5', '--color-primary-400': '#6366f1', '--color-primary-500': '#818cf8',
+      '--color-primary-600': '#818cf8', '--color-primary-700': '#a5b4fc', '--color-primary-800': '#c7d2fe',
+      '--color-primary-900': '#e0e7ff', '--color-primary-950': '#eef2ff',
+      '--color-accent-50': '#500724', '--color-accent-100': '#831843', '--color-accent-200': '#9d174d',
+      '--color-accent-300': '#db2777', '--color-accent-400': '#ec4899', '--color-accent-500': '#f472b6',
+      '--color-accent-600': '#f472b6', '--color-accent-700': '#f9a8d4', '--color-accent-800': '#fbcfe8',
+      // Surface: inverted for dark
+      '--color-surface-50': '#0b0f1a', '--color-surface-100': '#111827', '--color-surface-200': '#1f2937',
+      '--color-surface-300': '#374151', '--color-surface-400': '#6b7280', '--color-surface-500': '#9ca3af',
+      '--color-surface-600': '#d1d5db', '--color-surface-700': '#e5e7eb', '--color-surface-800': '#f3f4f6',
+      '--color-surface-900': '#f9fafb', '--color-surface-950': '#ffffff',
+      // Success/warning/danger adjusted for dark
+      '--color-success-50': '#052e16', '--color-success-500': '#4ade80', '--color-success-600': '#22c55e',
+      '--color-warning-50': '#451a03', '--color-warning-500': '#fbbf24', '--color-warning-600': '#f59e0b',
+      '--color-danger-50': '#450a0a', '--color-danger-500': '#f87171', '--color-danger-600': '#ef4444',
     },
   },
 }
+
+const SURFACE_KEYS = [
+  '--color-surface-50', '--color-surface-100', '--color-surface-200', '--color-surface-300',
+  '--color-surface-400', '--color-surface-500', '--color-surface-600', '--color-surface-700',
+  '--color-surface-800', '--color-surface-900', '--color-surface-950',
+  '--color-success-50', '--color-success-500', '--color-success-600',
+  '--color-warning-50', '--color-warning-500', '--color-warning-600',
+  '--color-danger-50', '--color-danger-500', '--color-danger-600',
+]
 
 const ThemeContext = createContext(null)
 
@@ -98,23 +101,23 @@ export function ThemeProvider({ children }) {
     if (!theme) return
 
     const root = document.documentElement
-    // Reset to defaults first (remove previous theme vars)
-    Object.keys(THEMES.ocean.vars).forEach(k => root.style.removeProperty(k))
-    // Also reset dark surface vars if switching from dark
-    ;['--color-surface-50', '--color-surface-100', '--color-surface-200', '--color-surface-300',
-      '--color-surface-400', '--color-surface-500', '--color-surface-600', '--color-surface-700',
-      '--color-surface-800', '--color-surface-900', '--color-surface-950'].forEach(k => root.style.removeProperty(k))
 
-    // Apply new theme vars
+    // Reset all vars
+    const allKeys = new Set()
+    Object.values(THEMES).forEach(t => Object.keys(t.vars).forEach(k => allKeys.add(k)))
+    SURFACE_KEYS.forEach(k => allKeys.add(k))
+    allKeys.forEach(k => root.style.removeProperty(k))
+
+    // Apply theme vars
     Object.entries(theme.vars).forEach(([key, value]) => {
       root.style.setProperty(key, value)
     })
 
-    // Dark mode body
+    // Toggle dark class for bg-white override
     if (theme.dark) {
-      document.body.style.colorScheme = 'dark'
+      root.classList.add('dark')
     } else {
-      document.body.style.colorScheme = 'light'
+      root.classList.remove('dark')
     }
   }, [])
 
@@ -127,8 +130,10 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('theme', id)
   }, [])
 
+  const isDark = THEMES[themeId]?.dark || false
+
   return (
-    <ThemeContext.Provider value={{ themeId, setTheme, themes: THEMES }}>
+    <ThemeContext.Provider value={{ themeId, setTheme, themes: THEMES, isDark }}>
       {children}
     </ThemeContext.Provider>
   )
