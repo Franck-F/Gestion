@@ -8,4 +8,5 @@ export const authApi = {
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.patch('/auth/me', data),
   changePassword: (data) => api.patch('/auth/password', data),
+  completeOnboarding: (data) => api.post('/auth/onboarding/complete', data),
 }

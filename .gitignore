@@ -1,15 +1,1 @@
-node_modules/
-dist/
-.env
-.env.local
-*.log
-server/uploads/*
-!server/uploads/.gitkeep
-server/prisma/dev.db
-server/prisma/dev.db-journal
-.DS_Store
-Thumbs.db
-.vercel/
-.agents/
-.claude/
-skills/
+node_modules

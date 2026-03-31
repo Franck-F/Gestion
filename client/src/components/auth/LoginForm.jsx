@@ -41,6 +41,7 @@ export function LoginForm() {
         type="email"
         placeholder="votre@email.com"
         icon={Mail}
+        autoComplete="email"
         error={errors.email?.message}
         {...register('email')}
       />
@@ -49,6 +50,7 @@ export function LoginForm() {
         type="password"
         placeholder="••••••••"
         icon={Lock}
+        autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}
       />

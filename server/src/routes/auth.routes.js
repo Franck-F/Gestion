@@ -15,6 +15,7 @@ import {
   getMe,
   updateProfile,
   changePassword,
+  completeOnboarding,
 } from '../controllers/auth.controller.js'
 
 const router = Router()
@@ -26,5 +27,6 @@ router.post('/logout', logout)
 router.get('/me', authenticate, getMe)
 router.patch('/me', authenticate, validate(updateProfileSchema), updateProfile)
 router.patch('/password', authenticate, validate(changePasswordSchema), changePassword)
+router.post('/onboarding/complete', authenticate, completeOnboarding)
 
 export default router

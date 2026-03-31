@@ -57,9 +57,11 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  avatarUrl             String?
+  onboardingCompleted   Boolean  @default(false)
+  goalType              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   refreshTokens RefreshToken[]
   candidatures  Candidature[]

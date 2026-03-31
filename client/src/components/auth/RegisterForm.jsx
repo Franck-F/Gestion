@@ -27,7 +27,7 @@ export function RegisterForm() {
     try {
       setError('')
       await authRegister(data)
-      navigate('/')
+      navigate('/onboarding')
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de l\'inscription')
     }
@@ -43,6 +43,7 @@ export function RegisterForm() {
           label="Prénom"
           placeholder="Jean"
           icon={User}
+          autoComplete="given-name"
           error={errors.firstName?.message}
           {...register('firstName')}
         />
@@ -50,6 +51,7 @@ export function RegisterForm() {
           label="Nom"
           placeholder="Dupont"
           icon={User}
+          autoComplete="family-name"
           error={errors.lastName?.message}
           {...register('lastName')}
         />
@@ -59,6 +61,7 @@ export function RegisterForm() {
         type="email"
         placeholder="votre@email.com"
         icon={Mail}
+        autoComplete="email"
         error={errors.email?.message}
         {...register('email')}
       />
@@ -67,6 +70,7 @@ export function RegisterForm() {
         type="password"
         placeholder="Minimum 8 caractères"
         icon={Lock}
+        autoComplete="new-password"
         error={errors.password?.message}
         {...register('password')}
       />

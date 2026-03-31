@@ -134,6 +134,19 @@ export async function updateProfile(req, res, next) {
   }
 }
 
+export async function completeOnboarding(req, res, next) {
+  try {
+    const { goalType } = req.body
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: { onboardingCompleted: true, goalType: goalType || null },
+    })
+    res.json(sanitizeUser(user))
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function changePassword(req, res, next) {
   try {
     const { currentPassword, newPassword } = req.body

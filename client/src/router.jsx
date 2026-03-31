@@ -3,6 +3,7 @@ import { AppLayout } from './components/layout/AppLayout.jsx'
 import { ProtectedRoute } from './components/auth/ProtectedRoute.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { RegisterPage } from './pages/RegisterPage.jsx'
+import { OnboardingPage } from './pages/OnboardingPage.jsx'
 import { DashboardPage } from './pages/DashboardPage.jsx'
 import { CandidaturesPage } from './pages/CandidaturesPage.jsx'
 import { CandidatureDetailPage } from './pages/CandidatureDetailPage.jsx'
@@ -18,6 +19,10 @@ import { NotFoundPage } from './pages/NotFoundPage.jsx'
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
+  {
+    path: '/onboarding',
+    element: <ProtectedRoute><OnboardingPage /></ProtectedRoute>,
+  },
   {
     path: '/',
     element: <ProtectedRoute><AppLayout /></ProtectedRoute>,

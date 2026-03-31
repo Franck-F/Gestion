@@ -1,26 +1,40 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Briefcase, GraduationCap, Target, FileText, ArrowRight, Clock, Activity } from 'lucide-react'
+import {
+  Briefcase, GraduationCap, Target, FileText, ArrowRight,
+  Clock, AlertTriangle, Plus, CheckCircle
+} from 'lucide-react'
 import { dashboardApi } from '../api/dashboard.js'
 import { PageHeader } from '../components/layout/PageHeader.jsx'
 import { Card, CardBody } from '../components/ui/Card.jsx'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
 import { ProgressBar } from '../components/ui/ProgressBar.jsx'
-import { formatDeadline, formatRelative } from '../utils/dateUtils.js'
+import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { Badge } from '../components/ui/Badge.jsx'
+import { formatDeadline, isOverdue } from '../utils/dateUtils.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
-function StatCard({ icon: Icon, label, value, sub, to, color }) {
+function QuickAction({ icon: Icon, label, to, color }) {
+  return (
+    <Link to={to} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-surface-200 hover:shadow-md transition-all bg-white">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+        <Icon size={20} />
+      </div>
+      <span className="text-xs font-medium text-surface-600 text-center">{label}</span>
+    </Link>
+  )
+}
+
+function StatCard({ icon: Icon, label, value, to, color }) {
   return (
     <Link to={to}>
-      <Card hover className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-surface-500">{label}</p>
-            <p className="text-2xl font-bold font-heading text-surface-900 mt-1">{value}</p>
-            {sub && <p className="text-xs text-surface-400 mt-1">{sub}</p>}
-          </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+      <Card hover className="p-4 md:p-5">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
             <Icon size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-2xl font-bold font-heading text-surface-900">{value}</p>
+            <p className="text-xs text-surface-500 truncate">{label}</p>
           </div>
         </div>
       </Card>
@@ -30,95 +44,108 @@ function StatCard({ icon: Icon, label, value, sub, to, color }) {
 
 export function DashboardPage() {
   const { user } = useAuth()
-  const { data: stats, isLoading: loadingStats } = useQuery({
+
+  const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: () => dashboardApi.getStats().then(r => r.data),
   })
-  const { data: deadlines, isLoading: loadingDeadlines } = useQuery({
+
+  const { data: deadlines = [] } = useQuery({
     queryKey: ['dashboard', 'deadlines'],
     queryFn: () => dashboardApi.getUpcomingDeadlines().then(r => r.data),
   })
-  const { data: activity, isLoading: loadingActivity } = useQuery({
+
+  const { data: activity = [] } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: () => dashboardApi.getRecentActivity().then(r => r.data),
   })
 
-  if (loadingStats) return <PageSpinner />
+  if (isLoading) return <PageSpinner />
+
+  const urgentDeadlines = deadlines.filter(d => {
+    const days = Math.ceil((new Date(d.date) - new Date()) / (1000 * 60 * 60 * 24))
+    return days <= 3
+  })
+
+  const greeting = () => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Bonjour'
+    if (h < 18) return 'Bon après-midi'
+    return 'Bonsoir'
+  }
 
   return (
     <div>
-      <PageHeader
-        title={`Bonjour, ${user?.firstName} !`}
-        description="Voici un aperçu de votre progression"
-      />
+      <PageHeader title={`${greeting()}, ${user?.firstName}`} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          icon={Briefcase}
-          label="Candidatures"
-          value={stats?.candidatures?.active || 0}
-          sub={`${stats?.candidatures?.total || 0} au total`}
-          to="/candidatures"
-          color="bg-primary-100 text-primary-600"
-        />
-        <StatCard
-          icon={GraduationCap}
-          label="Bourses"
-          value={stats?.bourses?.active || 0}
-          sub={`${stats?.bourses?.total || 0} au total`}
-          to="/bourses"
-          color="bg-accent-100 text-accent-600"
-        />
-        <StatCard
-          icon={Target}
-          label="Objectifs"
-          value={stats?.objectives?.inProgress || 0}
-          sub={`${stats?.objectives?.total || 0} au total`}
-          to="/objectives"
-          color="bg-warning-50 text-warning-600"
-        />
-        <StatCard
-          icon={FileText}
-          label="Documents"
-          value={`${stats?.documents?.ready || 0}/${stats?.documents?.total || 0}`}
-          sub="prêts"
-          to="/documents"
-          color="bg-success-50 text-success-600"
-        />
+      {urgentDeadlines.length > 0 && (
+        <div className="mb-6 p-4 rounded-xl bg-warning-50 border border-warning-200">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={16} className="text-warning-600" />
+            <p className="text-sm font-semibold text-warning-700">
+              {urgentDeadlines.length} échéance{urgentDeadlines.length > 1 ? 's' : ''} urgente{urgentDeadlines.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <ul className="space-y-1">
+            {urgentDeadlines.slice(0, 3).map((d, i) => (
+              <li key={i} className="text-sm text-warning-700 flex items-center justify-between">
+                <span className="truncate mr-2">{d.title}</span>
+                <span className="text-xs font-medium whitespace-nowrap">{formatDeadline(d.date)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <StatCard icon={Briefcase} label="Candidatures actives" value={stats?.candidatures?.active || 0} to="/candidatures" color="bg-primary-100 text-primary-600" />
+        <StatCard icon={GraduationCap} label="Bourses suivies" value={stats?.bourses?.active || 0} to="/bourses" color="bg-accent-100 text-accent-600" />
+        <StatCard icon={Target} label="Objectifs en cours" value={stats?.objectives?.inProgress || 0} to="/objectives" color="bg-warning-50 text-warning-600" />
+        <StatCard icon={FileText} label="Documents prêts" value={stats?.documents?.total > 0 ? `${stats.documents.ready}/${stats.documents.total}` : '0'} to="/documents" color="bg-success-50 text-success-600" />
       </div>
 
       {stats?.documents?.total > 0 && (
-        <Card className="mb-8 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-surface-700">Progression documents</p>
-            <p className="text-sm text-surface-400">{stats.documents.ready}/{stats.documents.total}</p>
+        <Card className="mb-6 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-surface-700">Documents prêts</p>
+            <Link to="/documents" className="text-xs text-primary-600 hover:underline">{stats.documents.ready}/{stats.documents.total}</Link>
           </div>
           <ProgressBar value={stats.documents.ready} max={stats.documents.total} />
         </Card>
       )}
 
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3">Actions rapides</h3>
+        <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+          <QuickAction icon={Plus} label="Candidature" to="/candidatures" color="bg-primary-100 text-primary-600" />
+          <QuickAction icon={GraduationCap} label="Bourse" to="/bourses" color="bg-accent-100 text-accent-600" />
+          <QuickAction icon={Target} label="Objectif" to="/objectives" color="bg-warning-50 text-warning-600" />
+          <QuickAction icon={FileText} label="Document" to="/documents" color="bg-success-50 text-success-600" />
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
-          <div className="px-5 py-4 border-b border-surface-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock size={18} className="text-surface-400" />
-              <h3 className="font-semibold text-surface-800 font-heading">Prochaines échéances</h3>
+              <Clock size={16} className="text-surface-400" />
+              <h3 className="font-semibold text-surface-800 text-sm">Prochaines échéances</h3>
             </div>
             <Link to="/agenda" className="text-xs text-primary-600 hover:underline flex items-center gap-1">
-              Tout voir <ArrowRight size={14} />
+              Voir tout <ArrowRight size={12} />
             </Link>
           </div>
           <CardBody>
-            {loadingDeadlines ? (
-              <p className="text-sm text-surface-400">Chargement...</p>
-            ) : !deadlines?.length ? (
-              <p className="text-sm text-surface-400">Aucune échéance à venir</p>
+            {deadlines.length === 0 ? (
+              <p className="text-sm text-surface-400 text-center py-4">Aucune échéance prévue</p>
             ) : (
               <ul className="space-y-3">
                 {deadlines.slice(0, 5).map((d, i) => (
-                  <li key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-surface-700 truncate mr-4">{d.title}</span>
-                    <span className="text-xs text-surface-400 whitespace-nowrap">{formatDeadline(d.date)}</span>
+                  <li key={i} className="flex items-center justify-between">
+                    <span className="text-sm text-surface-700 truncate mr-3">{d.title}</span>
+                    <Badge className={isOverdue(d.date) ? 'bg-danger-50 text-danger-600' : 'bg-surface-100 text-surface-600'}>
+                      {formatDeadline(d.date)}
+                    </Badge>
                   </li>
                 ))}
               </ul>
@@ -127,21 +154,22 @@ export function DashboardPage() {
         </Card>
 
         <Card>
-          <div className="px-5 py-4 border-b border-surface-100 flex items-center gap-2">
-            <Activity size={18} className="text-surface-400" />
-            <h3 className="font-semibold text-surface-800 font-heading">Activité récente</h3>
+          <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
+            <CheckCircle size={16} className="text-surface-400" />
+            <h3 className="font-semibold text-surface-800 text-sm">Activité récente</h3>
           </div>
           <CardBody>
-            {loadingActivity ? (
-              <p className="text-sm text-surface-400">Chargement...</p>
-            ) : !activity?.length ? (
-              <p className="text-sm text-surface-400">Aucune activité récente</p>
+            {activity.length === 0 ? (
+              <p className="text-sm text-surface-400 text-center py-4">Aucune activité pour le moment</p>
             ) : (
               <ul className="space-y-3">
                 {activity.slice(0, 5).map((a, i) => (
-                  <li key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-surface-700 truncate mr-4">{a.description}</span>
-                    <span className="text-xs text-surface-400 whitespace-nowrap">{formatRelative(a.date)}</span>
+                  <li key={i} className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-2 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm text-surface-700 truncate">{a.description}</p>
+                      <p className="text-xs text-surface-400">{formatDeadline(a.date)}</p>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -14,6 +14,8 @@ async function main() {
       passwordHash,
       firstName: 'Marie',
       lastName: 'Dupont',
+      onboardingCompleted: true,
+      goalType: 'alternance',
     },
   })
 
