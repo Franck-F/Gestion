@@ -7,6 +7,7 @@ import { Mail, Lock, User } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Input } from '../ui/Input.jsx'
 import { Button } from '../ui/Button.jsx'
+import { GoogleLoginButton } from './GoogleLoginButton.jsx'
 
 const schema = z.object({
   firstName: z.string().min(1, 'Prénom requis'),
@@ -16,7 +17,7 @@ const schema = z.object({
 })
 
 export function RegisterForm() {
-  const { register: authRegister } = useAuth()
+  const { register: authRegister, googleLogin } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -33,54 +34,76 @@ export function RegisterForm() {
     }
   }
 
+  const handleGoogleLogin = async (credential) => {
+    try {
+      setError('')
+      const data = await googleLogin(credential)
+      navigate(data.isNewUser ? '/onboarding' : '/')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur de connexion Google')
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <div className="space-y-5">
       {error && (
         <div className="p-3 rounded-lg bg-danger-50 text-danger-600 text-sm">{error}</div>
       )}
-      <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Prénom"
-          placeholder="Jean"
-          icon={User}
-          autoComplete="given-name"
-          error={errors.firstName?.message}
-          {...register('firstName')}
-        />
-        <Input
-          label="Nom"
-          placeholder="Dupont"
-          icon={User}
-          autoComplete="family-name"
-          error={errors.lastName?.message}
-          {...register('lastName')}
-        />
+
+      <GoogleLoginButton onSuccess={handleGoogleLogin} />
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 border-t border-surface-200" />
+        <span className="text-xs text-surface-400 uppercase">ou</span>
+        <div className="flex-1 border-t border-surface-200" />
       </div>
-      <Input
-        label="Email"
-        type="email"
-        placeholder="votre@email.com"
-        icon={Mail}
-        autoComplete="email"
-        error={errors.email?.message}
-        {...register('email')}
-      />
-      <Input
-        label="Mot de passe"
-        type="password"
-        placeholder="Minimum 8 caractères"
-        icon={Lock}
-        autoComplete="new-password"
-        error={errors.password?.message}
-        {...register('password')}
-      />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Inscription...' : 'Créer un compte'}
-      </Button>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Prénom"
+            placeholder="Jean"
+            icon={User}
+            autoComplete="given-name"
+            error={errors.firstName?.message}
+            {...register('firstName')}
+          />
+          <Input
+            label="Nom"
+            placeholder="Dupont"
+            icon={User}
+            autoComplete="family-name"
+            error={errors.lastName?.message}
+            {...register('lastName')}
+          />
+        </div>
+        <Input
+          label="Email"
+          type="email"
+          placeholder="votre@email.com"
+          icon={Mail}
+          autoComplete="email"
+          error={errors.email?.message}
+          {...register('email')}
+        />
+        <Input
+          label="Mot de passe"
+          type="password"
+          placeholder="Minimum 8 caractères"
+          icon={Lock}
+          autoComplete="new-password"
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Inscription...' : 'Créer un compte'}
+        </Button>
+      </form>
+
       <p className="text-sm text-center text-surface-500">
         Déjà un compte ?{' '}
         <Link to="/login" className="text-primary-600 font-medium hover:underline">Se connecter</Link>
       </p>
-    </form>
+    </div>
   )
 }

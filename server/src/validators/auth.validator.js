@@ -18,6 +18,10 @@ export const updateProfileSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
 })
 
+export const googleAuthSchema = z.object({
+  credential: z.string().min(1, 'Google credential requis'),
+})
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Le mot de passe actuel est requis'),
   newPassword: z.string().min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères'),

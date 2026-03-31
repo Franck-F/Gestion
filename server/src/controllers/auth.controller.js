@@ -1,3 +1,4 @@
+import { OAuth2Client } from 'google-auth-library'
 import prisma from '../config/database.js'
 import env from '../config/env.js'
 import {
@@ -9,6 +10,8 @@ import {
   revokeRefreshToken,
   sanitizeUser,
 } from '../services/auth.service.js'
+
+const googleClient = env.GOOGLE_CLIENT_ID ? new OAuth2Client(env.GOOGLE_CLIENT_ID) : null
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -36,10 +39,7 @@ export async function register(req, res, next) {
     const refreshToken = await generateRefreshToken(user.id)
 
     res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS)
-    res.status(201).json({
-      accessToken,
-      user: sanitizeUser(user),
-    })
+    res.status(201).json({ accessToken, user: sanitizeUser(user) })
   } catch (err) {
     next(err)
   }
@@ -54,6 +54,10 @@ export async function login(req, res, next) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
     }
 
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: 'Ce compte utilise la connexion Google. Utilisez "Continuer avec Google".' })
+    }
+
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
@@ -63,10 +67,61 @@ export async function login(req, res, next) {
     const refreshToken = await generateRefreshToken(user.id)
 
     res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS)
-    res.json({
-      accessToken,
-      user: sanitizeUser(user),
+    res.json({ accessToken, user: sanitizeUser(user) })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function googleAuth(req, res, next) {
+  try {
+    const { credential } = req.body
+
+    if (!googleClient) {
+      return res.status(500).json({ error: 'Google OAuth non configuré' })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
     })
+    const payload = ticket.getPayload()
+    const { sub: googleId, email, given_name, family_name, picture } = payload
+
+    // 1. Find by googleId
+    let user = await prisma.user.findUnique({ where: { googleId } })
+    let isNewUser = false
+
+    if (!user) {
+      // 2. Find by email (link accounts)
+      user = await prisma.user.findUnique({ where: { email } })
+
+      if (user) {
+        // Existing user — link Google account
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId, avatarUrl: user.avatarUrl || picture },
+        })
+      } else {
+        // 3. New user
+        user = await prisma.user.create({
+          data: {
+            email,
+            googleId,
+            firstName: given_name || '',
+            lastName: family_name || '',
+            avatarUrl: picture || null,
+          },
+        })
+        isNewUser = true
+      }
+    }
+
+    const accessToken = generateAccessToken(user.id, user.email)
+    const refreshToken = await generateRefreshToken(user.id)
+
+    res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS)
+    res.json({ accessToken, user: sanitizeUser(user), isNewUser })
   } catch (err) {
     next(err)
   }
@@ -86,10 +141,7 @@ export async function refresh(req, res, next) {
     }
 
     res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS)
-    res.json({
-      accessToken: result.accessToken,
-      user: sanitizeUser(result.user),
-    })
+    res.json({ accessToken: result.accessToken, user: sanitizeUser(result.user) })
   } catch (err) {
     next(err)
   }
@@ -110,12 +162,8 @@ export async function logout(req, res, next) {
 
 export async function getMe(req, res, next) {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.userId },
-    })
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' })
-    }
+    const user = await prisma.user.findUnique({ where: { id: req.userId } })
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' })
     res.json(sanitizeUser(user))
   } catch (err) {
     next(err)
@@ -124,10 +172,7 @@ export async function getMe(req, res, next) {
 
 export async function updateProfile(req, res, next) {
   try {
-    const user = await prisma.user.update({
-      where: { id: req.userId },
-      data: req.body,
-    })
+    const user = await prisma.user.update({ where: { id: req.userId }, data: req.body })
     res.json(sanitizeUser(user))
   } catch (err) {
     next(err)
@@ -150,19 +195,19 @@ export async function completeOnboarding(req, res, next) {
 export async function changePassword(req, res, next) {
   try {
     const { currentPassword, newPassword } = req.body
-
     const user = await prisma.user.findUnique({ where: { id: req.userId } })
+
+    if (!user.passwordHash) {
+      return res.status(400).json({ error: 'Ce compte utilise Google. Vous pouvez définir un mot de passe dans les paramètres.' })
+    }
+
     const valid = await verifyPassword(currentPassword, user.passwordHash)
     if (!valid) {
       return res.status(400).json({ error: 'Mot de passe actuel incorrect' })
     }
 
     const passwordHash = await hashPassword(newPassword)
-    await prisma.user.update({
-      where: { id: req.userId },
-      data: { passwordHash },
-    })
-
+    await prisma.user.update({ where: { id: req.userId }, data: { passwordHash } })
     res.json({ message: 'Mot de passe modifié avec succès' })
   } catch (err) {
     next(err)

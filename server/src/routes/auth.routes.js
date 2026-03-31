@@ -4,12 +4,14 @@ import { validate } from '../middleware/validate.js'
 import {
   registerSchema,
   loginSchema,
+  googleAuthSchema,
   updateProfileSchema,
   changePasswordSchema,
 } from '../validators/auth.validator.js'
 import {
   register,
   login,
+  googleAuth,
   refresh,
   logout,
   getMe,
@@ -22,6 +24,7 @@ const router = Router()
 
 router.post('/register', validate(registerSchema), register)
 router.post('/login', validate(loginSchema), login)
+router.post('/google', validate(googleAuthSchema), googleAuth)
 router.post('/refresh', refresh)
 router.post('/logout', logout)
 router.get('/me', authenticate, getMe)
