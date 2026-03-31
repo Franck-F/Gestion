@@ -1,17 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Sparkles, Briefcase, GraduationCap, FileText, Lightbulb } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Send, Bot, Briefcase, GraduationCap, FileText, Lightbulb, AlertCircle } from 'lucide-react'
 import { streamChat } from '../api/chat.js'
+import api from '../api/client.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 const SUGGESTIONS = [
-  { icon: Briefcase, text: 'Comment trouver une alternance rapidement ?' },
+  { icon: Briefcase, text: 'Quelles alternances correspondent à mon profil ?' },
   { icon: GraduationCap, text: 'Quelles bourses sont disponibles pour moi ?' },
-  { icon: FileText, text: 'Aide-moi à rédiger ma lettre de motivation' },
+  { icon: FileText, text: 'Aide-moi à améliorer mon CV' },
   { icon: Lightbulb, text: 'Conseils pour réussir un entretien d\'alternance' },
 ]
 
 function MarkdownText({ text }) {
-  // Simple markdown: bold, links, lists
   const lines = text.split('\n')
   return (
     <div className="space-y-1">
@@ -19,14 +20,10 @@ function MarkdownText({ text }) {
         if (line.startsWith('- ') || line.startsWith('• ')) {
           return <p key={i} className="pl-4 before:content-['•'] before:absolute before:left-0 relative">{line.slice(2)}</p>
         }
-        if (line.startsWith('**') && line.endsWith('**')) {
-          return <p key={i} className="font-semibold">{line.slice(2, -2)}</p>
-        }
         if (line.match(/^\d+\. /)) {
           return <p key={i} className="pl-4">{line}</p>
         }
         if (line.trim() === '') return <br key={i} />
-        // Bold inline
         const formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         return <p key={i} dangerouslySetInnerHTML={{ __html: formatted }} />
       })}
@@ -40,19 +37,24 @@ export function ChatPage() {
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const messagesEndRef = useRef(null)
-  const inputRef = useRef(null)
+
+  const { data: usageData } = useQuery({
+    queryKey: ['chat', 'usage'],
+    queryFn: () => api.get('/chat/usage').then(r => r.data),
+    refetchInterval: 60000,
+  })
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+  useEffect(scrollToBottom, [messages])
 
   const sendMessage = async (text) => {
     const content = text || input.trim()
     if (!content || streaming) return
+
+    if (usageData && !usageData.allowed) return
 
     const userMsg = { role: 'user', content }
     const newMessages = [...messages, userMsg]
@@ -60,7 +62,6 @@ export function ChatPage() {
     setInput('')
     setStreaming(true)
 
-    // Add placeholder for assistant
     setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
     await streamChat(
@@ -79,11 +80,7 @@ export function ChatPage() {
       (error) => {
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = {
-            role: 'assistant',
-            content: `Désolé, une erreur est survenue : ${error}`,
-            error: true,
-          }
+          updated[updated.length - 1] = { role: 'assistant', content: error, error: true }
           return updated
         })
         setStreaming(false)
@@ -97,9 +94,18 @@ export function ChatPage() {
   }
 
   const isEmpty = messages.length === 0
+  const limitReached = usageData && !usageData.allowed
 
   return (
     <div className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)]">
+      {/* Limit warning */}
+      {limitReached && (
+        <div className="bg-warning-50 border-b border-warning-200 px-4 py-2 flex items-center gap-2">
+          <AlertCircle size={16} className="text-warning-600 flex-shrink-0" />
+          <p className="text-xs text-warning-700">{usageData.reason}</p>
+        </div>
+      )}
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
         {isEmpty ? (
@@ -108,16 +114,16 @@ export function ChatPage() {
               <Bot size={32} className="text-primary-600" />
             </div>
             <h2 className="text-xl font-bold font-heading text-surface-900 mb-2">Assistant MyCheckList</h2>
-            <p className="text-surface-400 text-center max-w-md mb-8">
-              Expert en alternance, bourses et aides étudiantes. Pose-moi n'importe quelle question !
+            <p className="text-surface-400 text-center max-w-md mb-2">
+              Expert en alternance, bourses et aides. Je connais ton profil et tes candidatures pour des réponses personnalisées.
             </p>
+            {usageData?.remaining && (
+              <p className="text-xs text-surface-400 mb-6">{usageData.remaining} messages restants aujourd'hui</p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
               {SUGGESTIONS.map(({ icon: Icon, text }) => (
-                <button
-                  key={text}
-                  onClick={() => sendMessage(text)}
-                  className="flex items-start gap-3 p-4 rounded-xl border border-surface-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all text-left cursor-pointer"
-                >
+                <button key={text} onClick={() => sendMessage(text)} disabled={limitReached}
+                  className="flex items-start gap-3 p-4 rounded-xl border border-surface-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   <Icon size={18} className="text-primary-500 mt-0.5 flex-shrink-0" />
                   <span className="text-sm text-surface-700">{text}</span>
                 </button>
@@ -143,16 +149,12 @@ export function ChatPage() {
                   {msg.role === 'user' ? (
                     <p className="text-sm">{msg.content}</p>
                   ) : msg.content ? (
-                    <div className="text-sm leading-relaxed">
-                      <MarkdownText text={msg.content} />
-                    </div>
+                    <div className="text-sm leading-relaxed"><MarkdownText text={msg.content} /></div>
                   ) : (
-                    <div className="flex items-center gap-2 py-1">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
+                    <div className="flex gap-1 py-1">
+                      <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   )}
                 </div>
@@ -172,25 +174,27 @@ export function ChatPage() {
       <div className="border-t border-surface-200 bg-white p-3 md:p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2">
           <input
-            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pose ta question..."
-            disabled={streaming}
+            placeholder={limitReached ? 'Limite atteinte...' : 'Pose ta question...'}
+            disabled={streaming || limitReached}
+            maxLength={2000}
             className="flex-1 rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm text-surface-800 placeholder:text-surface-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 disabled:opacity-50"
           />
-          <button
-            type="submit"
-            disabled={!input.trim() || streaming}
-            className="w-11 h-11 rounded-xl bg-primary-600 text-white flex items-center justify-center hover:bg-primary-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
-          >
+          <button type="submit" disabled={!input.trim() || streaming || limitReached}
+            className="w-11 h-11 rounded-xl bg-primary-600 text-white flex items-center justify-center hover:bg-primary-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex-shrink-0">
             <Send size={18} />
           </button>
         </form>
-        <p className="text-center text-xs text-surface-400 mt-2 max-w-3xl mx-auto">
-          Propulsé par Claude AI — Les informations fournies sont à vérifier auprès des sources officielles
-        </p>
+        <div className="flex items-center justify-between max-w-3xl mx-auto mt-2 px-1">
+          <p className="text-xs text-surface-400">
+            Propulsé par Gemini AI — Les informations sont à vérifier auprès des sources officielles
+          </p>
+          {usageData?.remaining != null && !limitReached && (
+            <p className="text-xs text-surface-400">{usageData.remaining} msg restants</p>
+          )}
+        </div>
       </div>
     </div>
   )

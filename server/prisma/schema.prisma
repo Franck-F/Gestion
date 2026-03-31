@@ -79,6 +79,7 @@ model User {
   events          Event[]
   notes           Note[]
   notifications   Notification[]
+  chatUsage       ChatUsage[]
 
   @@map("users")
 }
@@ -336,4 +337,19 @@ model Notification {
   @@index([userId, read])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// ===================== CHAT USAGE TRACKING =====================
+
+model ChatUsage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokens    Int      @default(0)
+  date      DateTime @default(now()) @db.Date
+  count     Int      @default(0)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("chat_usage")
 }
