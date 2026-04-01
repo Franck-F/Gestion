@@ -158,7 +158,7 @@ export async function streamChat(userId, messages, onChunk) {
   }))
 
   const response = await genai.models.generateContentStream({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     contents,
     config: {
       systemInstruction: systemPrompt,
